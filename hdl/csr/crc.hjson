@@ -1,0 +1,72 @@
+{
+    name      : "CRC",
+    width     : 8,
+    desc      : "CSR for CRC"
+    interface : "sbi"
+    
+    parameters : [
+    ]
+
+    registers : [
+        {
+            name         : "data0",
+            address      : "x0",
+            desc         : "Data byte0 - write start crc",
+            swaccess     : "rw",
+            hwaccess     : "ro",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Data Byte 0"
+                },
+            ]
+        },
+        {
+            name       : "data1",
+            address    : "x1",
+            desc       : "Data byte1",
+            swaccess   : "rw",
+            hwaccess   : "ro",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Data Byte 1"
+                },
+            ]
+        },
+        {
+            name       : "crc0",
+            address    : "x2",
+            desc       : "CRC value byte 0",
+            swaccess   : "rw",
+            hwaccess   : "rw",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "CRC Byte 0"
+                },
+            ]
+        },
+        {
+            name       : "crc1",
+            address    : "x3",
+	    desc       : "CRC value byte 1",
+            swaccess   : "rw",
+            hwaccess   : "rw",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "CRC Byte 1"
+                },
+            ]
+        },
+    ]
+}
