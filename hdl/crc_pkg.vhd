@@ -8,9 +8,15 @@ package crc_pkg is
 -- [COMPONENT_INSERT][BEGIN]
 component crc_core is
   generic (
-    WIDTH_CRC  : positive := 16;
-    WIDTH_DATA : positive := 8;
-    POLYNOM    : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021"
+    WIDTH_CRC       : positive := 16;
+    WIDTH_DATA      : positive := 8;
+    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
+    SHIFT_LEFT      : boolean := false;                                         -- TRUE = shift left, FALSE = shift right
+    LSB_FIRST       : boolean := false;                                         -- TRUE = process LSB first, FALSE = MSB first
+    POLYNOM_REVERSE : boolean := false;                                         -- TRUE = reverse polynomial bits
+    REFLECT_IN      : boolean := false;                                         -- TRUE = reflect input data bits
+    REFLECT_OUT     : boolean := false;                                         -- TRUE = reflect CRC output bits
+    XOR_OUT         : std_logic_vector(WIDTH_CRC-1 downto 0) := (others => '0') -- XOR mask for output
   );
   port (
     d_i        : in  std_logic_vector(WIDTH_DATA-1 downto 0);
@@ -21,9 +27,15 @@ end component crc_core;
 
 component sbi_crc is
   generic (
-    WIDTH_CRC  : positive := 16;
-    WIDTH_DATA : positive :=  8;
-    POLYNOM    : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021"
+    WIDTH_CRC       : positive := 16;
+    WIDTH_DATA      : positive :=  8;
+    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
+    SHIFT_LEFT      : boolean := false;                                         -- TRUE = shift left, FALSE = shift right
+    LSB_FIRST       : boolean := false;                                         -- TRUE = process LSB first, FALSE = MSB first
+    POLYNOM_REVERSE : boolean := false;                                         -- TRUE = reverse polynomial bits
+    REFLECT_IN      : boolean := false;                                         -- TRUE = reflect input data bits
+    REFLECT_OUT     : boolean := false;                                         -- TRUE = reflect CRC output bits
+    XOR_OUT         : std_logic_vector(WIDTH_CRC-1 downto 0) := (others => '0') -- XOR mask for output
   );
   port   (
     clk_i            : in    std_logic;

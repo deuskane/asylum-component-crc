@@ -14,9 +14,10 @@ CAPI=2:
 # Revisions  :
 # Date        Version  Author   Description
 # 2025-11-26  1.0.0    mrosiere Created
+# 2025-11-29  1.0.1    mrosiere Add Generic SHIFT_LEFT, LSB_FIRST, REVERSE, REFLECT and XOR
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:crc:1.0.0
+name        : asylum:component:crc:1.0.1
 description : CRC Module
 
 #=========================================

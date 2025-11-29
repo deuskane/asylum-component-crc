@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2025-11-27
--- Last update: 2025-11-27
+-- Last update: 2025-11-29
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -17,6 +17,7 @@
 -- Revisions  :
 -- Date        Version  Author  Description
 -- 2025-11-27  1.0      mrosiere Created
+-- 2025-11-29  1.1      mrosiere Add Generic SHIFT_LEFT, LSB_FIRST, REVERSE, REFLECT and XOR
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -29,9 +30,15 @@ use     asylum.crc_csr_pkg.all;
 
 entity sbi_crc is
   generic (
-    WIDTH_CRC  : positive := 16;
-    WIDTH_DATA : positive :=  8;
-    POLYNOM    : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021"
+    WIDTH_CRC       : positive := 16;
+    WIDTH_DATA      : positive :=  8;
+    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
+    SHIFT_LEFT      : boolean := false;                                         -- TRUE = shift left, FALSE = shift right
+    LSB_FIRST       : boolean := false;                                         -- TRUE = process LSB first, FALSE = MSB first
+    POLYNOM_REVERSE : boolean := false;                                         -- TRUE = reverse polynomial bits
+    REFLECT_IN      : boolean := false;                                         -- TRUE = reflect input data bits
+    REFLECT_OUT     : boolean := false;                                         -- TRUE = reflect CRC output bits
+    XOR_OUT         : std_logic_vector(WIDTH_CRC-1 downto 0) := (others => '0') -- XOR mask for output
   );
   port   (
     clk_i            : in    std_logic;
@@ -88,7 +95,13 @@ begin  -- architecture rtl
   generic map(
     WIDTH_CRC        => WIDTH_CRC      ,
     WIDTH_DATA       => WIDTH_DATA     ,
-    POLYNOM          => POLYNOM
+    POLYNOM          => POLYNOM        ,
+    SHIFT_LEFT       => SHIFT_LEFT     ,
+    LSB_FIRST        => LSB_FIRST      ,
+    POLYNOM_REVERSE  => POLYNOM_REVERSE,
+    REFLECT_IN       => REFLECT_IN     ,
+    REFLECT_OUT      => REFLECT_OUT    ,
+    XOR_OUT          => XOR_OUT        
     )
   port map(
     d_i              => data      (WIDTH_DATA-1 downto 0),
