@@ -465,4 +465,5 @@ begin  -- architecture rtl
     crc0_rdata when crc0_rcs = '1' else
     crc1_rdata when crc1_rcs = '1' else
     (others => '0'); -- Bad Address, return 0
+  sbi_tgt_o.info.name <= to_sbi_name("CRC");
 end architecture rtl;
