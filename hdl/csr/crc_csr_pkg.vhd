@@ -129,6 +129,7 @@ package CRC_csr_pkg is
     crc1 : CRC_crc1_hw2sw_t;
   end record CRC_hw2sw_t;
 
+
   constant CRC_ADDR_WIDTH : natural := 2;
   constant CRC_DATA_WIDTH : natural := 8;
 
@@ -138,14 +139,14 @@ package CRC_csr_pkg is
 component CRC_registers is
   port (
     -- Clock and Reset
-    clk_i      : in  std_logic;
-    arst_b_i   : in  std_logic;
+    clk_i      : in  std_logic
+   ;arst_b_i   : in  std_logic
     -- Bus
-    sbi_ini_i  : in  sbi_ini_t;
-    sbi_tgt_o  : out sbi_tgt_t;
+   ;sbi_ini_i  : in  sbi_ini_t
+   ;sbi_tgt_o  : out sbi_tgt_t
     -- CSR
-    sw2hw_o    : out CRC_sw2hw_t;
-    hw2sw_i    : in  CRC_hw2sw_t
+   ;sw2hw_o    : out CRC_sw2hw_t
+   ;hw2sw_i    : in  CRC_hw2sw_t
   );
 end component CRC_registers;
 
