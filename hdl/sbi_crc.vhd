@@ -30,6 +30,7 @@ use     asylum.crc_csr_pkg.all;
 
 entity sbi_crc is
   generic (
+    NAME            : string  := "";
     WIDTH_CRC       : positive := 16;
     WIDTH_DATA      : positive :=  8;
     POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
@@ -64,6 +65,9 @@ architecture rtl of sbi_crc is
 begin  -- architecture rtl
 
   ins_csr : crc_registers
+  generic map(
+    MODULE_NAME      => NAME
+    )
   port map(
     clk_i            => clk_i           ,
     arst_b_i         => arst_b_i        ,

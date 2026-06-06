@@ -137,6 +137,9 @@ package CRC_csr_pkg is
   -- Component
   ------------------------------------
 component CRC_registers is
+  generic (
+    MODULE_NAME :  string := "" -- Name of the module
+  );
   port (
     -- Clock and Reset
     clk_i      : in  std_logic

@@ -18,6 +18,9 @@ use     asylum.sbi_pkg.all;
 -- Width       : 8
 --==================================
 entity CRC_registers is
+  generic (
+    MODULE_NAME :  string := "" -- Name of the module
+  );
   port (
     -- Clock and Reset
     clk_i      : in  std_logic
@@ -465,5 +468,11 @@ begin  -- architecture rtl
     crc0_rdata when crc0_rcs = '1' else
     crc1_rdata when crc1_rcs = '1' else
     (others => '0'); -- Bad Address, return 0
-  sbi_tgt_o.info.name <= to_sbi_name("CRC");
+
+  gen_tgt_info_name : if MODULE_NAME = ""
+  generate
+    sbi_tgt_o.info.name <= to_sbi_name("CRC");
+  else generate
+    sbi_tgt_o.info.name <= to_sbi_name(MODULE_NAME);
+  end generate;
 end architecture rtl;

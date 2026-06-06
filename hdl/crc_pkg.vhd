@@ -27,6 +27,7 @@ end component crc_core;
 
 component sbi_crc is
   generic (
+    NAME            : string  := "";
     WIDTH_CRC       : positive := 16;
     WIDTH_DATA      : positive :=  8;
     POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
