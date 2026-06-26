@@ -60,7 +60,7 @@
 #define CRC_CRC1_VALUE_MASK 255
 
 //----------------------------------
-// Structure {module}_t
+// Structure CRC_t
 //----------------------------------
 typedef struct {
   uint8_t data0; // 0x0
