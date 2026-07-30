@@ -14,6 +14,13 @@ use     asylum.sbi_pkg.all;
 
 package CRC_csr_pkg is
 
+  ------------------------------------
+  -- Global Constants
+  ------------------------------------
+
+  constant CRC_ADDR_WIDTH : natural := 2;
+  constant CRC_DATA_WIDTH : natural := 8;
+
   --==================================
   -- Register    : data0
   -- Description : Data byte0 - write start crc
@@ -23,6 +30,8 @@ package CRC_csr_pkg is
   -- Hw Access   : ro
   -- Hw Type     : reg
   --==================================
+  constant CRC_DATA0 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(0, CRC_ADDR_WIDTH);
+
   type CRC_data0_sw2hw_t is record
     re : std_logic;
     we : std_logic;
@@ -43,6 +52,8 @@ package CRC_csr_pkg is
   -- Hw Access   : ro
   -- Hw Type     : reg
   --==================================
+  constant CRC_DATA1 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(1, CRC_ADDR_WIDTH);
+
   type CRC_data1_sw2hw_t is record
     re : std_logic;
     we : std_logic;
@@ -63,6 +74,8 @@ package CRC_csr_pkg is
   -- Hw Access   : rw
   -- Hw Type     : reg
   --==================================
+  constant CRC_CRC0 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(2, CRC_ADDR_WIDTH);
+
   type CRC_crc0_sw2hw_t is record
     re : std_logic;
     we : std_logic;
@@ -93,6 +106,8 @@ package CRC_csr_pkg is
   -- Hw Access   : rw
   -- Hw Type     : reg
   --==================================
+  constant CRC_CRC1 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(3, CRC_ADDR_WIDTH);
+
   type CRC_crc1_sw2hw_t is record
     re : std_logic;
     we : std_logic;
@@ -128,10 +143,6 @@ package CRC_csr_pkg is
     crc0 : CRC_crc0_hw2sw_t;
     crc1 : CRC_crc1_hw2sw_t;
   end record CRC_hw2sw_t;
-
-
-  constant CRC_ADDR_WIDTH : natural := 2;
-  constant CRC_DATA_WIDTH : natural := 8;
 
   ------------------------------------
   -- Component

@@ -38,13 +38,13 @@ architecture rtl of CRC_registers is
 
   signal   sig_wcs   : std_logic;
   signal   sig_we    : std_logic;
-  signal   sig_waddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_waddr : unsigned(CRC_ADDR_WIDTH-1 downto 0);
   signal   sig_wdata : std_logic_vector(sbi_ini_i.wdata'length-1 downto 0);
   signal   sig_wbusy : std_logic;
 
   signal   sig_rcs   : std_logic;
   signal   sig_re    : std_logic;
-  signal   sig_raddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_raddr : unsigned(CRC_ADDR_WIDTH-1 downto 0);
   signal   sig_rdata : std_logic_vector(sbi_tgt_o.rdata'length-1 downto 0);
   signal   sig_rbusy : std_logic;
 
@@ -143,12 +143,12 @@ begin  -- architecture rtl
   -- Interface 
   sig_wcs   <= sbi_ini_i.cs;
   sig_we    <= sbi_ini_i.we;
-  sig_waddr <= sbi_ini_i.addr;
+  sig_waddr <= unsigned(sbi_ini_i.addr(CRC_ADDR_WIDTH-1 downto 0));
   sig_wdata <= sbi_ini_i.wdata;
 
   sig_rcs   <= sbi_ini_i.cs;
   sig_re    <= sbi_ini_i.re;
-  sig_raddr <= sbi_ini_i.addr;
+  sig_raddr <= unsigned(sbi_ini_i.addr(CRC_ADDR_WIDTH-1 downto 0));
   sbi_tgt_o.rdata <= sig_rdata;
   sbi_tgt_o.ready <= not sig_busy;
 
@@ -174,7 +174,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    data0_rcs     <= '1' when     (sig_raddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,CRC_ADDR_WIDTH))) else '0';
+    data0_rcs     <= '1' when (sig_raddr = CRC_DATA0) else '0';
     data0_re      <= sig_rcs and sig_re and data0_rcs;
     data0_rdata   <= (
       0 => data0_rdata_sw(0), -- value(0)
@@ -187,7 +187,7 @@ begin  -- architecture rtl
       7 => data0_rdata_sw(7), -- value(7)
       others => '0');
 
-    data0_wcs     <= '1' when       (sig_waddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,CRC_ADDR_WIDTH)))   else '0';
+    data0_wcs     <= '1' when       (sig_waddr = CRC_DATA0)   else '0';
     data0_we      <= sig_wcs and sig_we and data0_wcs;
     data0_wdata   <= sig_wdata;
     data0_wdata_sw(7 downto 0) <= data0_wdata(7 downto 0); -- value
@@ -247,7 +247,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    data1_rcs     <= '1' when     (sig_raddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,CRC_ADDR_WIDTH))) else '0';
+    data1_rcs     <= '1' when (sig_raddr = CRC_DATA1) else '0';
     data1_re      <= sig_rcs and sig_re and data1_rcs;
     data1_rdata   <= (
       0 => data1_rdata_sw(0), -- value(0)
@@ -260,7 +260,7 @@ begin  -- architecture rtl
       7 => data1_rdata_sw(7), -- value(7)
       others => '0');
 
-    data1_wcs     <= '1' when       (sig_waddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,CRC_ADDR_WIDTH)))   else '0';
+    data1_wcs     <= '1' when       (sig_waddr = CRC_DATA1)   else '0';
     data1_we      <= sig_wcs and sig_we and data1_wcs;
     data1_wdata   <= sig_wdata;
     data1_wdata_sw(7 downto 0) <= data1_wdata(7 downto 0); -- value
@@ -320,7 +320,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    crc0_rcs     <= '1' when     (sig_raddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,CRC_ADDR_WIDTH))) else '0';
+    crc0_rcs     <= '1' when (sig_raddr = CRC_CRC0) else '0';
     crc0_re      <= sig_rcs and sig_re and crc0_rcs;
     crc0_rdata   <= (
       0 => crc0_rdata_sw(0), -- value(0)
@@ -333,7 +333,7 @@ begin  -- architecture rtl
       7 => crc0_rdata_sw(7), -- value(7)
       others => '0');
 
-    crc0_wcs     <= '1' when       (sig_waddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,CRC_ADDR_WIDTH)))   else '0';
+    crc0_wcs     <= '1' when       (sig_waddr = CRC_CRC0)   else '0';
     crc0_we      <= sig_wcs and sig_we and crc0_wcs;
     crc0_wdata   <= sig_wdata;
     crc0_wdata_sw(7 downto 0) <= crc0_wdata(7 downto 0); -- value
@@ -394,7 +394,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    crc1_rcs     <= '1' when     (sig_raddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,CRC_ADDR_WIDTH))) else '0';
+    crc1_rcs     <= '1' when (sig_raddr = CRC_CRC1) else '0';
     crc1_re      <= sig_rcs and sig_re and crc1_rcs;
     crc1_rdata   <= (
       0 => crc1_rdata_sw(0), -- value(0)
@@ -407,7 +407,7 @@ begin  -- architecture rtl
       7 => crc1_rdata_sw(7), -- value(7)
       others => '0');
 
-    crc1_wcs     <= '1' when       (sig_waddr(CRC_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,CRC_ADDR_WIDTH)))   else '0';
+    crc1_wcs     <= '1' when       (sig_waddr = CRC_CRC1)   else '0';
     crc1_we      <= sig_wcs and sig_we and crc1_wcs;
     crc1_wdata   <= sig_wdata;
     crc1_wdata_sw(7 downto 0) <= crc1_wdata(7 downto 0); -- value
