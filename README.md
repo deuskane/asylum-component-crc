@@ -1,3 +1,5 @@
+[![CI](https://github.com/deuskane/asylum-component-crc/actions/workflows/ci.yml/badge.svg)](https://github.com/deuskane/asylum-component-crc/actions/workflows/ci.yml)
+
 # asylum-component-crc
 
 A flexible and configurable CRC (Cyclic Redundancy Check) computation component for hardware implementations. This repository contains synthesizable VHDL modules that provide both combinatorial CRC computation and a register-based interface for system integration.
