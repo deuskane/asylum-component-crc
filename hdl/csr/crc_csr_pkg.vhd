@@ -23,7 +23,7 @@ package CRC_csr_pkg is
 
   --==================================
   -- Register    : data0
-  -- Description : Data byte0 - write start crc
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
@@ -45,7 +45,7 @@ package CRC_csr_pkg is
 
   --==================================
   -- Register    : data1
-  -- Description : Data byte1
+  -- Description : Data byte 1 - bits 15:8 of the data word (write before data0, used when WIDTH_DATA > 8)
   -- Address     : 0x1
   -- Width       : 8
   -- Sw Access   : rw
@@ -67,12 +67,12 @@ package CRC_csr_pkg is
 
   --==================================
   -- Register    : crc0
-  -- Description : CRC value byte 0
+  -- Description : CRC byte 0 - write: raw CRC register bits 7:0 (seed), read: final CRC bits 7:0 (REFLECT_OUT then XOR_OUT applied)
   -- Address     : 0x2
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   constant CRC_CRC0 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(2, CRC_ADDR_WIDTH);
 
@@ -99,12 +99,12 @@ package CRC_csr_pkg is
 
   --==================================
   -- Register    : crc1
-  -- Description : CRC value byte 1
+  -- Description : CRC byte 1 - write: raw CRC register bits 15:8 (seed), read: final CRC bits 15:8 (REFLECT_OUT then XOR_OUT applied)
   -- Address     : 0x3
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   constant CRC_CRC1 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(3, CRC_ADDR_WIDTH);
 

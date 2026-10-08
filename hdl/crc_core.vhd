@@ -19,6 +19,8 @@
 -- Date        Version  Author   Description
 -- 2025-11-27  1.0      mrosiere Created
 -- 2025-11-29  1.1      mrosiere Add Generic SHIFT_LEFT, LSB_FIRST, REVERSE, REFLECT and XOR
+-- 2026-10-05  1.2      mrosiere crc_next_o is the raw register (no REFLECT_OUT/XOR_OUT),
+--                               add crc_o = final CRC of crc_i (REFLECT_OUT then XOR_OUT)
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -41,9 +43,10 @@ entity crc_core is
     XOR_OUT         : std_logic_vector(WIDTH_CRC-1 downto 0) := (others => '0') -- XOR mask for output
   );
   port (
-    d_i        : in  std_logic_vector(WIDTH_DATA-1 downto 0);
-    crc_i      : in  std_logic_vector(WIDTH_CRC -1 downto 0);
-    crc_next_o : out std_logic_vector(WIDTH_CRC -1 downto 0)
+    d_i        : in  std_logic_vector(WIDTH_DATA-1 downto 0); -- Data word
+    crc_i      : in  std_logic_vector(WIDTH_CRC -1 downto 0); -- Current CRC register (raw)
+    crc_next_o : out std_logic_vector(WIDTH_CRC -1 downto 0); -- CRC register after d_i (raw, feed back to crc_i)
+    crc_o      : out std_logic_vector(WIDTH_CRC -1 downto 0)  -- Final CRC of crc_i (REFLECT_OUT then XOR_OUT)
   );
 end entity crc_core;
 
@@ -99,8 +102,16 @@ begin
       end if;
     end loop;
 
-    -- Reflect CRC output if REFLECT_OUT is TRUE
-    crc_var    := reverse_bits(crc_var) when REFLECT_OUT else crc_var;
-    crc_next_o <= crc_var xor XOR_OUT;
+    -- Raw register : REFLECT_OUT and XOR_OUT must not be applied here,
+    -- else the next data word is processed with a corrupted register
+    crc_next_o <= crc_var;
+  end process;
+
+  -- Final CRC : Reflect CRC output if REFLECT_OUT is TRUE, then apply XOR_OUT
+  process(all)
+    variable crc_var      : std_logic_vector(WIDTH_CRC-1 downto 0);
+  begin
+    crc_var    := reverse_bits(crc_i) when REFLECT_OUT else crc_i;
+    crc_o      <= crc_var xor XOR_OUT;
   end process;
 end architecture combi_based;

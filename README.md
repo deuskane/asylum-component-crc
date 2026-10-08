@@ -1,160 +1,321 @@
+<!--
+  README GENERATION INSTRUCTIONS (for the next regeneration run)
+  ----------------------------------------------------------------
+  This README follows the common Asylum IP model. Regenerate it from the
+  sources, never from the previous README text alone.
+
+  Sources of truth (in priority order):
+    1. hdl/*.vhd            : entities, generics, ports, packages
+    2. hdl/csr/*.hjson      : register map (regtool); *_csr.md/.h are generated
+    3. <IP>.core            : VLNV (name), filesets, targets, depends, revisions
+    4. mk/targets.txt       : target list shown by `make help`; mk/defs.mk
+    5. sim/, syn/, esw/, boards/ : testbenches, constraints, software
+  Section order (keep it, same headings in every IP):
+    CI badge / Title + one-line description + VLNV / Table of Contents /
+    Introduction (Key Features) / Block Diagram / Top-Level (Parameters,
+    Ports, Instantiation Example) / HDL Modules / Register Map /
+    Verification / Synthesis / Design Notes (optional) /
+    Directory Structure / Dependencies
+  Rules:
+    - Language: English. Tables: Parameters = Name|Type|Default|Description,
+      Ports = Name|Direction|Type|Description (grouped by interface).
+    - Register Map: link to the generated hdl/csr/<X>_csr.md (plus the
+      .hjson source and _csr.h header); never copy register tables here.
+    - Top-Level = sbi_* wrapper if present, else the entity used by the
+      `default` target, else the main entity (libraries: list packages).
+    - Write "This IP has no software-visible registers." / "No dedicated
+      synthesis target ..." instead of removing a section.
+    - Keep still-accurate hand-written content (ISA tables, results,
+      images) in "Design Notes"; drop anything not backed by the sources.
+    - Block diagram: doc/<NAME>.drawio (NAME = 4th field of the VLNV),
+      top entity box with generics on top, inputs left, outputs right,
+      bus interfaces as bold arrows, internal blocks colour-coded
+      (CSR yellow, FIFO/memory green, core logic blue, external grey).
+      Update it whenever ports/generics/sub-blocks change.
+    - Do not edit generated files (hdl/csr/*_csr.*) or the CI badge URL.
+-->
 [![CI](https://github.com/deuskane/asylum-component-crc/actions/workflows/ci.yml/badge.svg)](https://github.com/deuskane/asylum-component-crc/actions/workflows/ci.yml)
 
 # asylum-component-crc
 
-A flexible and configurable CRC (Cyclic Redundancy Check) computation component for hardware implementations. This repository contains synthesizable VHDL modules that provide both combinatorial CRC computation and a register-based interface for system integration.
+**Configurable CRC calculator (polynomial, bit order, shift direction, reflection, output XOR) with CSR access over the SBI bus.**
+
+VLNV: `asylum:component:crc:1.1.0`
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [HDL Modules](#hdl-modules)
-  - [crc_core](#crc_core)
-  - [sbi_crc](#sbi_crc)
-  - [crc_pkg](#crc_pkg)
-  - [crc_csr](#crc_csr)
-- [Register Map](#register-map)
-- [Verification](#verification)
+1. [Introduction](#introduction)
+2. [Block Diagram](#block-diagram)
+3. [Top-Level](#top-level)
+4. [HDL Modules](#hdl-modules)
+5. [Register Map](#register-map)
+6. [Verification](#verification)
+7. [Synthesis](#synthesis)
+8. [Design Notes](#design-notes)
+9. [Directory Structure](#directory-structure)
+10. [Dependencies](#dependencies)
 
 ## Introduction
 
-The CRC component provides a highly configurable CRC computation engine suitable for various industrial CRC standards including CRC-16, CRC-32, and custom polynomial configurations. The component supports:
+This IP computes a CRC in hardware, one data word per bus write. Software writes the seed into `crc0` / `crc1`, then for each data word writes `data1` (if the word is wider than 8 bits) and `data0`; the write to `data0` updates the internal (raw) CRC register with the next value. Reading `crc1:crc0` returns the final CRC of the data processed so far (raw register, optionally reflected by `REFLECT_OUT`, then XORed with `XOR_OUT`), so the result of a multi-word message matches the standard CRC catalogue (Rocksoft model) for any combination of the generics. The CRC engine `crc_core` is purely combinational and processes the whole data word in one cycle; its polynomial, width and bit-ordering options are generics, so the same core can implement the usual reflected and non-reflected CRC variants up to 16 bits.
 
-- **Flexible data widths**: Configurable input data width (default 8 bits)
-- **Variable CRC width**: Configurable CRC polynomial width (default 16 bits)
-- **Multiple polynomial options**: Support for any polynomial or standard variants
-- **Bit ordering control**: LSB-first or MSB-first processing
-- **Shift direction**: Left or right shift modes
-- **Reflection modes**: Input/output reflection for reflected variants
-- **XOR output masking**: Final XOR mask capability
-- **System integration**: Register-based interface for SoC integration
+### Key Features
 
-The component is designed as part of the Asylum framework and can be integrated into larger systems via the SBI (Simple Bus Interface).
+- CRC width `WIDTH_CRC` and data word width `WIDTH_DATA` up to 16 bits each in `sbi_crc` (`crc_core` itself is not limited)
+- Any polynomial (`POLYNOM`, implicit MSB), optionally bit-reversed (`POLYNOM_REVERSE`)
+- Left (MSB feedback) or right (LSB feedback) shift register (`SHIFT_LEFT`)
+- Data bits processed MSB or LSB first (`LSB_FIRST`), optional input / output reflection (`REFLECT_IN`, `REFLECT_OUT`) and output XOR mask (`XOR_OUT`)
+- One data word per write, result available one clock cycle after the write of `data0`
+- Software-writable CRC register (seed = catalogue `Init`); the read value is always the final CRC (`REFLECT_OUT` / `XOR_OUT` applied on the read path only, never fed back)
+
+## Block Diagram
+
+Diagram: [doc/crc.drawio](doc/crc.drawio) (open with diagrams.net or the VS Code Draw.io extension).
+
+- The SBI bus accesses `CRC_registers` (generated by regtool from [hdl/csr/crc.hjson](hdl/csr/crc.hjson)): `data0`, `data1` (registers) and `crc0`, `crc1` (external registers, `hwtype: ext`).
+- `sbi_crc` holds the raw 16-bit CRC register `crc_r`: a software write of `crc0` / `crc1` loads its low / high byte (seed), and one cycle after a software write of `data0` it is replaced by `crc_next_o`.
+- `crc_core` receives `data1:data0` (`WIDTH_DATA` LSBs) and `crc_r` (`WIDTH_CRC` LSBs); `crc_next_o` (raw next register) is fed back, `crc_o` (final CRC of `crc_r`) is returned when `crc0` / `crc1` are read.
+
+## Top-Level
+
+Top-level entity: **`sbi_crc`** ([hdl/sbi_crc.vhd](hdl/sbi_crc.vhd)), library `asylum`, component declared in `asylum.crc_pkg`.
+
+### Parameters
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `NAME` | string | `""` | Instance name, forwarded to the CSR block (`MODULE_NAME`, visible in `sbi_tgt_o.info`) |
+| `WIDTH_CRC` | positive | `16` | CRC width in bits (<= 16 in `sbi_crc`) |
+| `WIDTH_DATA` | positive | `8` | Data word width in bits (<= 16 in `sbi_crc`: `data1:data0`) |
+| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `x"1021"` | Polynomial without the implicit MSB (the default only fits `WIDTH_CRC = 16`) |
+| `SHIFT_LEFT` | boolean | `false` | `true`: shift left, feedback from the MSB; `false`: shift right, feedback from the LSB |
+| `LSB_FIRST` | boolean | `false` | `true`: data bits processed LSB first; `false`: MSB first |
+| `POLYNOM_REVERSE` | boolean | `false` | `true`: the bit-reversed `POLYNOM` is used |
+| `REFLECT_IN` | boolean | `false` | `true`: data word bit-reversed before processing |
+| `REFLECT_OUT` | boolean | `false` | `true`: result bit-reversed (read path only) |
+| `XOR_OUT` | std_logic_vector(WIDTH_CRC-1 downto 0) | `(others => '0')` | XOR mask applied to the result (read path only) |
+
+### Ports
+
+#### Clock & Reset
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | System clock |
+| `arst_b_i` | in | std_logic | Asynchronous reset, active low |
+
+#### Bus (SBI)
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `sbi_ini_i` | in | sbi_ini_t | SBI request from the initiator (`cs`, `re`, `we`, `addr`, `wdata`) |
+| `sbi_tgt_o` | out | sbi_tgt_t | SBI response to the initiator (`ready`, `rdata`, `info`) |
+
+### Instantiation Example
+
+CRC-16/CCITT-FALSE (polynomial 0x1021, MSB first, no reflection, seed 0xFFFF written by software into `crc1:crc0`):
+
+```vhdl
+library asylum;
+use     asylum.sbi_pkg.all;
+use     asylum.crc_pkg.all;
+
+  ins_crc : entity asylum.sbi_crc
+    generic map
+    ( NAME            => "CRC0"
+     ,WIDTH_CRC       => 16
+     ,WIDTH_DATA      => 8
+     ,POLYNOM         => x"1021"
+     ,SHIFT_LEFT      => true
+     ,LSB_FIRST       => false
+     ,POLYNOM_REVERSE => false
+     ,REFLECT_IN      => false
+     ,REFLECT_OUT     => false
+     ,XOR_OUT         => x"0000"
+    )
+    port map
+    ( clk_i     => clk
+     ,arst_b_i  => arst_b
+     ,sbi_ini_i => sbi_inis(CRC0_ID)   -- sbi_ini_t(addr(1 downto 0), wdata(7 downto 0))
+     ,sbi_tgt_o => sbi_tgts(CRC0_ID)   -- sbi_tgt_t(rdata(7 downto 0))
+    );
+```
+
+The CSR bank uses 2 address bits (`CRC_ADDR_WIDTH = 2`) and 8-bit data (`CRC_DATA_WIDTH = 8`), see `asylum.CRC_csr_pkg` ([hdl/csr/crc_csr_pkg.vhd](hdl/csr/crc_csr_pkg.vhd)).
 
 ## HDL Modules
 
+| File | Unit | Kind | Role |
+|------|------|------|------|
+| [hdl/crc_pkg.vhd](hdl/crc_pkg.vhd) | `crc_pkg` | package | Component declarations of `crc_core` and `sbi_crc` |
+| [hdl/crc_core.vhd](hdl/crc_core.vhd) | `crc_core` | entity | Combinational CRC engine (architecture `combi_based`) |
+| [hdl/sbi_crc.vhd](hdl/sbi_crc.vhd) | `sbi_crc` | entity | Top-level: `CRC_registers` + raw CRC register + `crc_core`; asserts `WIDTH_CRC <= 16` and `WIDTH_DATA <= 16` |
+| hdl/csr/crc_csr.vhd | `CRC_registers` | entity | Generated CSR bank (regtool) |
+| hdl/csr/crc_csr_pkg.vhd | `CRC_csr_pkg` | package | Generated types (`CRC_sw2hw_t`, `CRC_hw2sw_t`), address constants and `CRC_registers` component |
+
 ### crc_core
 
-**File**: hdl/crc_core.vhd
+#### Parameters
 
-The core combinatorial CRC computation engine that performs polynomial-based CRC calculation on input data.
-
-#### Generics
-
-| Generic Name | Type | Default | Description |
-|---|---|---|---|
-| WIDTH_CRC | positive | 16 | Width of the CRC polynomial and register (bits) |
-| WIDTH_DATA | positive | 8 | Width of input data (bits) |
-| POLYNOM | std_logic_vector | x"1021" | CRC polynomial without implicit MSB (e.g., 0x1021 for CRC-16-CCITT) |
-| SHIFT_LEFT | boolean | false | TRUE = shift left mode, FALSE = shift right mode |
-| LSB_FIRST | boolean | false | TRUE = process bits LSB first, FALSE = process bits MSB first |
-| POLYNOM_REVERSE | boolean | false | TRUE = reverse polynomial bits, FALSE = use polynomial as-is |
-| REFLECT_IN | boolean | false | TRUE = reflect/reverse input data bits, FALSE = use data as-is |
-| REFLECT_OUT | boolean | false | TRUE = reflect/reverse final CRC output, FALSE = use CRC as-is |
-| XOR_OUT | std_logic_vector | (others => '0') | XOR mask applied to final CRC output |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `WIDTH_CRC` | positive | `16` | CRC width |
+| `WIDTH_DATA` | positive | `8` | Data width |
+| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `x"1021"` | Polynomial without the implicit MSB |
+| `SHIFT_LEFT` | boolean | `false` | Shift direction (see top-level) |
+| `LSB_FIRST` | boolean | `false` | Data bit order |
+| `POLYNOM_REVERSE` | boolean | `false` | Use the bit-reversed polynomial |
+| `REFLECT_IN` | boolean | `false` | Reflect the input data |
+| `REFLECT_OUT` | boolean | `false` | Reflect the result (`crc_o` only) |
+| `XOR_OUT` | std_logic_vector(WIDTH_CRC-1 downto 0) | `(others => '0')` | Output XOR mask (`crc_o` only) |
 
 #### Ports
 
-| Port Name | Direction | Width | Description |
-|---|---|---|---|
-| d_i | in | WIDTH_DATA | Input data byte(s) to be processed by CRC |
-| crc_i | in | WIDTH_CRC | Current CRC value (feedback register) |
-| crc_next_o | out | WIDTH_CRC | Next CRC value (combinatorial result) |
-
-#### Operation
-
-The crc_core module implements a parallel CRC computation using a combinatorial architecture. For each input bit, it:
-
-1. XORs the feedback bit with the appropriate data bit (determined by LSB_FIRST)
-2. Shifts the CRC register left or right (controlled by SHIFT_LEFT)
-3. Applies the polynomial feedback if the feedback bit is '1'
-4. Reflects both input and/or output data if configured
-5. Applies the final XOR mask before output
-
-The module supports both reflected and non-reflected CRC variants through configuration, enabling compatibility with standard CRC algorithms like CRC-16, CRC-32, etc.
-
----
-
-### sbi_crc
-
-**File**: hdl/sbi_crc.vhd
-
-A register-mapped CRC component providing a system bus interface for integration into larger systems. It wraps the crc_core engine with register management and SBI bus protocol support.
-
-#### Generics
-
-Same as crc_core module (see above table).
-
-#### Ports
-
-| Port Name | Direction | Type | Description |
-|---|---|---|---|
-| clk_i | in | std_logic | System clock |
-| rst_b_i | in | std_logic | Asynchronous reset (active low) |
-| sbi_ini_i | in | sbi_ini_t | SBI initiator signals (bus requests) |
-| sbi_tgt_o | out | sbi_tgt_t | SBI target signals (bus responses) |
-
-#### Operation
-
-The sbi_crc module integrates the CRC computation engine with a register file accessible through the SBI bus interface. It:
-
-1. Accepts data writes via the SBI bus to data0 and data1 registers
-2. Automatically triggers CRC computation when data0 is written
-3. Updates CRC value registers (crc0 and crc1) with the computed result
-4. Supports software read/write access to all CRC registers
-5. Provides a stateful CRC accumulation for multi-byte processing
-
----
-
-### crc_pkg
-
-**File**: hdl/crc_pkg.vhd
-
-VHDL package containing component declarations for crc_core and sbi_crc modules, enabling instantiation in other designs.
-
----
-
-### crc_csr
-
-**Files**: 
-- hdl/csr/crc_csr.vhd - Generated register file
-- hdl/csr/crc_csr_pkg.vhd - Generated package with CSR types
-- hdl/csr/crc_csr.h - Generated C header file
-- hdl/csr/crc.hjson - Register definition (source)
-
-The CSR (Control/Status Register) module provides the register interface for the SBI bus. It is automatically generated from crc.hjson using the 
-egtool generator in the FuseSoC build process.
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `d_i` | in | std_logic_vector(WIDTH_DATA-1 downto 0) | Data word |
+| `crc_i` | in | std_logic_vector(WIDTH_CRC-1 downto 0) | Current raw CRC register |
+| `crc_next_o` | out | std_logic_vector(WIDTH_CRC-1 downto 0) | Raw CRC register after processing `d_i` (combinational, no `REFLECT_OUT` / `XOR_OUT`): feed it back to `crc_i` |
+| `crc_o` | out | std_logic_vector(WIDTH_CRC-1 downto 0) | Final CRC of `crc_i`: reflected if `REFLECT_OUT`, then XORed with `XOR_OUT` (combinational) |
 
 ## Register Map
 
-The CRC component provides four 8-bit registers accessible through the SBI bus interface. For detailed bitfield information, see [hdl/csr/crc_csr.md](hdl/csr/crc_csr.md).
+The register map is generated by regtool from [hdl/csr/crc.hjson](hdl/csr/crc.hjson):
 
-| Address | Register Name | Access | Description |
-|---|---|---|---|
-| 0x0 | data0 | RW | Data Byte 0 - Write triggers CRC computation |
-| 0x1 | data1 | RW | Data Byte 1 |
-| 0x2 | crc0 | RW | CRC Output Byte 0 |
-| 0x3 | crc1 | RW | CRC Output Byte 1 |
+- Register documentation: **[hdl/csr/crc_csr.md](hdl/csr/crc_csr.md)**
+- C header: [hdl/csr/crc_csr.h](hdl/csr/crc_csr.h)
 
-### Register Details
+Notes:
 
-#### 0x0 - data0 (Data Byte 0)
-Data byte 0 - writing to this register triggers CRC computation with data0 and data1
+- A software write to `data0` triggers the computation; write `data1` before `data0` when `WIDTH_DATA > 8` (`data1` is ignored when `WIDTH_DATA <= 8`).
+- `crc0` / `crc1` (external registers): a write loads the raw CRC register (seed, catalogue `Init`; bits above `WIDTH_CRC` are ignored), a read returns the final CRC (`REFLECT_OUT` then `XOR_OUT`, bits above `WIDTH_CRC` read 0). A written value therefore reads back transformed when `REFLECT_OUT` / `XOR_OUT` are used.
+- The new CRC is readable one clock cycle after the `data0` write: a read issued in the very next cycle still returns the previous CRC.
+- `data0` / `data1` and the raw CRC register reset to 0, so `crc1:crc0` read `XOR_OUT` after reset.
+- A software write of `crc0` / `crc1` in the same cycle as the update triggered by `data0` has the priority (the update is dropped).
 
-**Bitfield [7:0] value**: Data Byte 0
+## Verification
 
-#### 0x1 - data1 (Data Byte 1)
-Data byte 1
+### Testbenches
 
-**Bitfield [7:0] value**: Data Byte 1
+| File | DUT | Description |
+|------|-----|-------------|
+| [sim/tb_crc_pkg.vhd](sim/tb_crc_pkg.vhd) | - | Table `C_CRC_CFG` of `sbi_crc` configurations, each one linked to a CRC of the standard catalogue (Rocksoft parameters + check value of `"123456789"`), and a bit-serial Rocksoft reference model (`crc_model*`, independent of `crc_core`) |
+| [sim/tb_crc.vhd](sim/tb_crc.vhd) | `sbi_crc` | UVVM testbench with the SBI VIP, configuration selected by the generic `CFG`. T1 reset values (`data*` = 0, `crc1:crc0` = `XOR_OUT`), T2 register read/write (`crc*` write raw / read final, bits above `WIDTH_CRC` ignored), T3 reference model against the catalogue check value, T4 DUT CRC of `"123456789"` with the intermediate CRC checked after every word, T5 latency (previous CRC in the cycle following the `data0` write, new CRC one cycle later), T6 priority of a software `crc0` write over the update, T7 32 random messages (1 to 16 words, random seed, garbage in unused `data1` / seed bits), T8 asynchronous reset. 108 checks per configuration (96 for `WIDTH_DATA = 16`) |
 
-#### 0x2 - crc0 (CRC Output Byte 0)
-CRC value byte 0 (read-write from software perspective)
+| `CFG` | Configuration | `SHIFT_LEFT` | `LSB_FIRST` | `POLYNOM_REVERSE` | `REFLECT_IN` | `REFLECT_OUT` | `XOR_OUT` | Seed | Check |
+|-------|---------------|--------------|-------------|-------------------|--------------|---------------|-----------|------|-------|
+| 0 | CRC-8/SMBUS, `POLYNOM = 0x07` | true | false | false | false | false | 0x00 | 0x00 | 0xF4 |
+| 1 | CRC-8/I-432-1, `POLYNOM = 0x07` | true | false | false | false | false | 0x55 | 0x00 | 0xA1 |
+| 2 | CRC-16/CCITT-FALSE, `POLYNOM = 0x1021` | true | false | false | false | false | 0x0000 | 0xFFFF | 0x29B1 |
+| 3 | CRC-16/GENIBUS, `POLYNOM = 0x1021` | true | false | false | false | false | 0xFFFF | 0xFFFF | 0xD64E |
+| 4 | CRC-16/ARC, `POLYNOM = 0x8005` | true | false | false | true | true | 0x0000 | 0x0000 | 0xBB3D |
+| 5 | CRC-16/X-25, `POLYNOM = 0x1021` | true | false | false | true | true | 0xFFFF | 0xFFFF | 0x906E |
+| 6 | CRC-16/MODBUS, `POLYNOM = 0xA001` (PicoSoC) | false | true | false | false | false | 0x0000 | 0xFFFF | 0x4B37 |
+| 7 | CRC-16/ARC, `POLYNOM = 0x8005` | false | false | true | true | false | 0x0000 | 0x0000 | 0xBB3D |
+| 8 | CRC-5/USB, `WIDTH_CRC = 5`, `POLYNOM = 0x05` | true | false | false | true | true | 0x1F | 0x1F | 0x19 |
+| 9 | CRC-16/XMODEM, `WIDTH_DATA = 16`, `POLYNOM = 0x1021` | true | false | false | false | false | 0x0000 | 0x0000 | model only |
 
-**Bitfield [7:0] value**: CRC Byte 0
+### Targets
 
-#### 0x3 - crc1 (CRC Output Byte 1)
-CRC value byte 1 (read-write from software perspective)
+| Target | Toplevel | Description |
+|--------|----------|-------------|
+| `default` | `sbi_crc` | HDL fileset + CSR generation (not a simulation) |
+| `sim_crc8_smbus` | `tb_crc` | `CFG=0`: CRC-8/SMBUS |
+| `sim_crc8_i432` | `tb_crc` | `CFG=1`: CRC-8/I-432-1 (`XOR_OUT`) |
+| `sim_crc16_ccitt_false` | `tb_crc` | `CFG=2`: CRC-16/CCITT-FALSE |
+| `sim_crc16_genibus` | `tb_crc` | `CFG=3`: CRC-16/GENIBUS (`XOR_OUT`) |
+| `sim_crc16_arc` | `tb_crc` | `CFG=4`: CRC-16/ARC, shift left with `REFLECT_IN` / `REFLECT_OUT` |
+| `sim_crc16_x25` | `tb_crc` | `CFG=5`: CRC-16/X-25 (`REFLECT_IN` / `REFLECT_OUT` / `XOR_OUT`) |
+| `sim_crc16_modbus` | `tb_crc` | `CFG=6`: CRC-16/MODBUS, shift right, configuration of `asylum-soc-picosoc` |
+| `sim_crc16_arc_shift_right` | `tb_crc` | `CFG=7`: CRC-16/ARC, shift right with `POLYNOM_REVERSE` and `REFLECT_IN` |
+| `sim_crc5_usb` | `tb_crc` | `CFG=8`: CRC-5/USB (`WIDTH_CRC = 5`) |
+| `sim_crc16_xmodem_data16` | `tb_crc` | `CFG=9`: CRC-16/XMODEM with `WIDTH_DATA = 16` |
 
-**Bitfield [7:0] value**: CRC Byte 1
+All simulation targets pass (`>> Simulation SUCCESS`) with GHDL. `WIDTH_CRC` / `WIDTH_DATA` above 16 are rejected by an assertion of `sbi_crc` (not simulated).
 
-For complete register and bitfield definitions, refer to [hdl/csr/crc_csr.md](hdl/csr/crc_csr.md).
+### How to Run
+
+The default tool is GHDL (`mk/defs.mk`: `TOOL ?= ghdl`, `TARGET ?= sim_crc16_ccitt_false`).
+
+```bash
+make help                          # variables, rules and target list (mk/targets.txt)
+make sim_crc16_x25                 # run one target (log in log/)
+make nonreg_sim                    # run every sim_* target
+make TARGETS_FILTER=crc16 nonreg_sim   # run a filtered subset
+make clean                         # remove build/ and log/
+```
+
+Equivalent FuseSoC command:
+
+```bash
+fusesoc --cores-root . run --build-root build --target sim_crc16_x25 asylum:component:crc:1.1.0
+```
+
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs every `sim_*` target.
+
+## Synthesis
+
+No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; they are VHDL-2008 (`process(all)`, conditional variable assignments in `crc_core`). `crc_core` is an unrolled XOR network whose size grows with `WIDTH_DATA x WIDTH_CRC`; the CSR bank is fixed (two 8-bit data registers) plus the 16-bit raw CRC register of `sbi_crc`; `crc_o` adds a `WIDTH_CRC`-bit XOR on the read path.
+
+## Design Notes
+
+### Algorithm
+
+For each of the `WIDTH_DATA` bits (order set by `LSB_FIRST`, after optional `REFLECT_IN`):
+
+- `SHIFT_LEFT = true`: `fb = crc(MSB) xor d(bit)`, `crc = (crc << 1) xor (fb ? POLY : 0)`
+- `SHIFT_LEFT = false`: `fb = crc(0) xor d(bit)`, `crc = (crc >> 1) xor (fb ? POLY : 0)`
+
+with `POLY = POLYNOM` or its bit-reversed value (`POLYNOM_REVERSE`). This raw value (`crc_next_o`) is stored; the final CRC (`crc_o`, read value of `crc1:crc0`) is the raw register optionally reflected (`REFLECT_OUT`) and XORed with `XOR_OUT`.
+
+Common conventions:
+
+| Convention | `SHIFT_LEFT` | `LSB_FIRST` | `POLYNOM_REVERSE` |
+|------------|--------------|-------------|-------------------|
+| Non-reflected (e.g. CRC-16/CCITT-FALSE, poly 0x1021) | `true` | `false` | `false` |
+| Reflected, catalogue style (e.g. CRC-16/ARC, X-25): `REFLECT_IN = REFLECT_OUT = true` | `true` | `false` | `false` |
+| Reflected, shift right (e.g. CRC-16/MODBUS, poly 0x8005 processed as 0xA001): `REFLECT_OUT = false`, seed = reflected catalogue `Init` | `false` | `true` | `true` (or `POLYNOM = 0xA001`) |
+
+### Register Write-Back
+
+`sbi_crc` keeps the raw CRC register `crc_r` and replaces it by `crc_core(data1:data0, crc_r)` one clock cycle after a software write to `data0` (registered write strobe of the CSR). `REFLECT_OUT` and `XOR_OUT` are applied only on the read path (`crc_o`), so a CRC computed over any number of words matches the catalogue value.
+
+Up to version 1.0.2 the result of `crc_core` (with `REFLECT_OUT` / `XOR_OUT` already applied) was written back into `crc1:crc0` and fed back as `crc_i` for the next word: any configuration with `REFLECT_OUT = true` or `XOR_OUT /= 0` gave a wrong CRC for messages of more than one word (e.g. CRC-16/X-25 of `"123456789"` returned 0x77B5 instead of 0x906E). Configurations without output transformation (such as the CRC-16/MODBUS instance of `asylum-soc-picosoc`) behave as before.
+
+To continue a computation from a saved CRC with `REFLECT_OUT` / `XOR_OUT`, software must undo the output transformation (XOR with `XOR_OUT`, then reflect) before writing it back into `crc1:crc0`.
+
+## Directory Structure
+
+```
+asylum-component-crc/
+├── crc.core                # FuseSoC core (asylum:component:crc)
+├── Makefile                # Common Asylum Makefile (FuseSoC wrapper)
+├── mk/
+│   ├── defs.mk             # FILE_CORE, default TARGET and TOOL
+│   └── targets.txt         # Target list (generated from the .core)
+├── .github/workflows/
+│   └── ci.yml              # CI (one job per sim_* target, generated by make ci_generate)
+├── doc/
+│   └── crc.drawio          # Block diagram
+├── sim/
+│   ├── tb_crc_pkg.vhd      # Configurations + reference model
+│   └── tb_crc.vhd          # UVVM testbench
+└── hdl/
+    ├── crc_pkg.vhd
+    ├── crc_core.vhd
+    ├── sbi_crc.vhd
+    └── csr/
+        ├── crc.hjson        # Register description (source)
+        ├── crc_csr.vhd      # Generated
+        ├── crc_csr_pkg.vhd  # Generated
+        ├── crc_csr.md       # Generated
+        └── crc_csr.h        # Generated
+```
+
+## Dependencies
+
+| Core | Used by (fileset) | Purpose |
+|------|-------------------|---------|
+| `asylum:utils:generators` | `hdl` | regtool generator and CSR building blocks (`csr_reg`, `csr_ext`) |
+| `asylum:utils:pkg` | `hdl` | Common packages (`sbi_pkg`, `logic_pkg` for `mux2` / `reverse_bits`) |
+| `bitvis:verification:uvvm` | `sim` | UVVM utility library and SBI VIP (`bitvis_vip_sbi`) |

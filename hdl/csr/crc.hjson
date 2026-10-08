@@ -11,7 +11,7 @@
         {
             name         : "data0",
             address      : "x0",
-            desc         : "Data byte0 - write start crc",
+            desc         : "Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)",
             swaccess     : "rw",
             hwaccess     : "ro",
             fields: [
@@ -26,7 +26,7 @@
         {
             name       : "data1",
             address    : "x1",
-            desc       : "Data byte1",
+            desc       : "Data byte 1 - bits 15:8 of the data word (write before data0, used when WIDTH_DATA > 8)",
             swaccess   : "rw",
             hwaccess   : "ro",
             fields: [
@@ -41,9 +41,10 @@
         {
             name       : "crc0",
             address    : "x2",
-            desc       : "CRC value byte 0",
+            desc       : "CRC byte 0 - write: raw CRC register bits 7:0 (seed), read: final CRC bits 7:0 (REFLECT_OUT then XOR_OUT applied)",
             swaccess   : "rw",
             hwaccess   : "rw",
+            hwtype     : "ext",
             fields: [
                 {
                     name: "value",
@@ -56,9 +57,10 @@
         {
             name       : "crc1",
             address    : "x3",
-	    desc       : "CRC value byte 1",
+            desc       : "CRC byte 1 - write: raw CRC register bits 15:8 (seed), read: final CRC bits 15:8 (REFLECT_OUT then XOR_OUT applied)",
             swaccess   : "rw",
             hwaccess   : "rw",
+            hwtype     : "ext",
             fields: [
                 {
                     name: "value",

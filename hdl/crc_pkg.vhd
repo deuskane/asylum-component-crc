@@ -1,3 +1,19 @@
+-------------------------------------------------------------------------------
+-- Title      : crc_pkg
+-- Project    : PicoSOC
+-------------------------------------------------------------------------------
+-- File       : crc_pkg.vhd
+-- Author     : Mathieu Rosiere
+-------------------------------------------------------------------------------
+-- Description: Component declarations of crc_core and sbi_crc
+-------------------------------------------------------------------------------
+-- Copyright (c) 2025
+-------------------------------------------------------------------------------
+-- Revisions  :
+-- Date        Version  Author   Description
+-- 2025-11-27  1.0      mrosiere Created
+-- 2026-10-05  1.1      mrosiere crc_core : add port crc_o
+-------------------------------------------------------------------------------
 library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.NUMERIC_STD.ALL;
@@ -19,9 +35,10 @@ component crc_core is
     XOR_OUT         : std_logic_vector(WIDTH_CRC-1 downto 0) := (others => '0') -- XOR mask for output
   );
   port (
-    d_i        : in  std_logic_vector(WIDTH_DATA-1 downto 0);
-    crc_i      : in  std_logic_vector(WIDTH_CRC -1 downto 0);
-    crc_next_o : out std_logic_vector(WIDTH_CRC -1 downto 0)
+    d_i        : in  std_logic_vector(WIDTH_DATA-1 downto 0); -- Data word
+    crc_i      : in  std_logic_vector(WIDTH_CRC -1 downto 0); -- Current CRC register (raw)
+    crc_next_o : out std_logic_vector(WIDTH_CRC -1 downto 0); -- CRC register after d_i (raw, feed back to crc_i)
+    crc_o      : out std_logic_vector(WIDTH_CRC -1 downto 0)  -- Final CRC of crc_i (REFLECT_OUT then XOR_OUT)
   );
 end component crc_core;
 

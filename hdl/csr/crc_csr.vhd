@@ -160,7 +160,7 @@ begin  -- architecture rtl
   generate
   --==================================
   -- Register    : data0
-  -- Description : Data byte0 - write start crc
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
@@ -233,7 +233,7 @@ begin  -- architecture rtl
   generate
   --==================================
   -- Register    : data1
-  -- Description : Data byte1
+  -- Description : Data byte 1 - bits 15:8 of the data word (write before data0, used when WIDTH_DATA > 8)
   -- Address     : 0x1
   -- Width       : 8
   -- Sw Access   : rw
@@ -306,12 +306,12 @@ begin  -- architecture rtl
   generate
   --==================================
   -- Register    : crc0
-  -- Description : CRC value byte 0
+  -- Description : CRC byte 0 - write: raw CRC register bits 7:0 (seed), read: final CRC bits 7:0 (REFLECT_OUT then XOR_OUT applied)
   -- Address     : 0x2
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   --==================================
   -- Field       : value
@@ -340,11 +340,9 @@ begin  -- architecture rtl
     crc0_wdata_hw(7 downto 0) <= hw2sw_i.crc0.value; -- value
     sw2hw_o.crc0.value <= crc0_rdata_hw(7 downto 0); -- value
 
-    ins_crc0 : csr_reg
+    ins_crc0 : csr_ext
       generic map
         (WIDTH         => 8
-        ,INIT          => INIT_crc0
-        ,MODEL         => "rw"
         )
       port map
         (clk_i         => clk_i
@@ -380,12 +378,12 @@ begin  -- architecture rtl
   generate
   --==================================
   -- Register    : crc1
-  -- Description : CRC value byte 1
+  -- Description : CRC byte 1 - write: raw CRC register bits 15:8 (seed), read: final CRC bits 15:8 (REFLECT_OUT then XOR_OUT applied)
   -- Address     : 0x3
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   --==================================
   -- Field       : value
@@ -414,11 +412,9 @@ begin  -- architecture rtl
     crc1_wdata_hw(7 downto 0) <= hw2sw_i.crc1.value; -- value
     sw2hw_o.crc1.value <= crc1_rdata_hw(7 downto 0); -- value
 
-    ins_crc1 : csr_reg
+    ins_crc1 : csr_ext
       generic map
         (WIDTH         => 8
-        ,INIT          => INIT_crc1
-        ,MODEL         => "rw"
         )
       port map
         (clk_i         => clk_i

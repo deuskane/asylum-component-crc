@@ -1,2 +1,12 @@
-default : Default Target
+default                   : Default Target
+sim_crc16_arc             : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005, shift left, REFLECT_IN/OUT)
+sim_crc16_arc_shift_right : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005 reversed, shift right, REFLECT_IN)
+sim_crc16_ccitt_false     : Simulation of sbi_crc with VIP - CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF)
+sim_crc16_genibus         : Simulation of sbi_crc with VIP - CRC-16/GENIBUS (poly 0x1021, init 0xFFFF, XOR_OUT 0xFFFF)
+sim_crc16_modbus          : Simulation of sbi_crc with VIP - CRC-16/MODBUS (poly 0xA001, shift right, LSB first - PicoSoC config)
+sim_crc16_x25             : Simulation of sbi_crc with VIP - CRC-16/X-25 (poly 0x1021, REFLECT_IN/OUT, XOR_OUT 0xFFFF)
+sim_crc16_xmodem_data16   : Simulation of sbi_crc with VIP - CRC-16/XMODEM with WIDTH_DATA 16
+sim_crc5_usb              : Simulation of sbi_crc with VIP - CRC-5/USB (WIDTH_CRC 5, REFLECT_IN/OUT, XOR_OUT 0x1F)
+sim_crc8_i432             : Simulation of sbi_crc with VIP - CRC-8/I-432-1 (poly 0x07, XOR_OUT 0x55)
+sim_crc8_smbus            : Simulation of sbi_crc with VIP - CRC-8/SMBUS (poly 0x07)
 

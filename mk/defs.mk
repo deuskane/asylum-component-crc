@@ -1,3 +1,3 @@
 FILE_CORE	?= crc.core
-TARGET          ?=
-TOOL		?=
+TARGET          ?= sim_crc16_ccitt_false
+TOOL		?= ghdl
