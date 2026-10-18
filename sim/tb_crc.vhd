@@ -10,6 +10,8 @@
 --              (see C_CRC_CFG in tb_crc_pkg). Every CRC read from the DUT is
 --              compared with a bit-serial Rocksoft reference model, itself
 --              checked against the catalogue check value.
+--              Two crc_core instances with the default generics (16 bits,
+--              and WIDTH_CRC = 8 only) are checked against the catalogue.
 -------------------------------------------------------------------------------
 -- Copyright (c) 2026
 -------------------------------------------------------------------------------
@@ -62,6 +64,13 @@ architecture sim of tb_crc is
                                    wdata(C_DATA_WIDTH-1 downto 0),
                                    rdata(C_DATA_WIDTH-1 downto 0));
 
+  -- crc_core with the default generics (WIDTH_CRC = 16, and WIDTH_CRC = 8)
+  signal def_d          : std_logic_vector( 7 downto 0) := (others => '0');
+  signal def16_crc      : std_logic_vector(15 downto 0) := (others => '0');
+  signal def16_next     : std_logic_vector(15 downto 0);
+  signal def8_crc       : std_logic_vector( 7 downto 0) := (others => '0');
+  signal def8_next      : std_logic_vector( 7 downto 0);
+
 begin
 
   clock_generator(clk_i, clk_ena, 20 ns, "TB Clock");
@@ -84,6 +93,25 @@ begin
       arst_b_i        => arst_b_i,
       sbi_ini_i       => sbi_ini,
       sbi_tgt_o       => sbi_tgt
+    );
+
+  ins_def16 : crc_core
+    port map (
+      d_i             => def_d,
+      crc_i           => def16_crc,
+      crc_next_o      => def16_next,
+      crc_o           => open
+    );
+
+  ins_def8 : crc_core
+    generic map (
+      WIDTH_CRC       => 8
+    )
+    port map (
+      d_i             => def_d,
+      crc_i           => def8_crc,
+      crc_next_o      => def8_next,
+      crc_o           => open
     );
 
   sbi_ini.cs    <= sbi_if.cs;
@@ -170,6 +198,21 @@ begin
 
     log(ID_LOG_HDR, "Configuration " & integer'image(CFG) & " : " & C_CFG.name &
         " WIDTH_CRC=" & integer'image(C_CFG.width_crc) & " WIDTH_DATA=" & integer'image(C_CFG.width_data), C_SCOPE);
+
+    -------------------------------------------------------------------------
+    log(ID_LOG_HDR, "T0 : crc_core default generics : CRC-16/XMODEM, CRC-8/SMBUS with WIDTH_CRC = 8", C_SCOPE);
+    -------------------------------------------------------------------------
+    def16_crc <= (others => '0');
+    def8_crc  <= (others => '0');
+    for i in C_CHECK_MSG'range loop
+      def_d     <= C_CHECK_MSG(i)(7 downto 0);
+      wait for 1 ns;
+      def16_crc <= def16_next;
+      def8_crc  <= def8_next;
+      wait for 1 ns;
+    end loop;
+    chk_val(def16_crc, x"31C3", "Default generics : CRC-16/XMODEM check value of ""123456789""");
+    chk_val(def8_crc , x"F4"  , "Default generics, WIDTH_CRC = 8 : CRC-8/SMBUS check value of ""123456789""");
 
     -------------------------------------------------------------------------
     log(ID_LOG_HDR, "T1 : Reset values", C_SCOPE);

@@ -87,8 +87,8 @@ Top-level entity: **`sbi_crc`** ([hdl/sbi_crc.vhd](hdl/sbi_crc.vhd)), library `a
 | `NAME` | string | `""` | Instance name, forwarded to the CSR block (`MODULE_NAME`, visible in `sbi_tgt_o.info`) |
 | `WIDTH_CRC` | positive | `16` | CRC width in bits (<= 16 in `sbi_crc`) |
 | `WIDTH_DATA` | positive | `8` | Data word width in bits (<= 16 in `sbi_crc`: `data1:data0`) |
-| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `x"1021"` | Polynomial without the implicit MSB (the default only fits `WIDTH_CRC = 16`) |
-| `SHIFT_LEFT` | boolean | `false` | `true`: shift left, feedback from the MSB; `false`: shift right, feedback from the LSB |
+| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `crc_default_polynom(WIDTH_CRC)` | Polynomial without the implicit MSB. Default (`crc_pkg`): `x"07"` for `WIDTH_CRC = 8`, `x"1021"` for 16; any other width must set it (assertion failure otherwise) |
+| `SHIFT_LEFT` | boolean | `true` | `true`: shift left, feedback from the MSB; `false`: shift right, feedback from the LSB |
 | `LSB_FIRST` | boolean | `false` | `true`: data bits processed LSB first; `false`: MSB first |
 | `POLYNOM_REVERSE` | boolean | `false` | `true`: the bit-reversed `POLYNOM` is used |
 | `REFLECT_IN` | boolean | `false` | `true`: data word bit-reversed before processing |
@@ -147,7 +147,7 @@ The CSR bank uses 2 address bits (`CRC_ADDR_WIDTH = 2`) and 8-bit data (`CRC_DAT
 
 | File | Unit | Kind | Role |
 |------|------|------|------|
-| [hdl/crc_pkg.vhd](hdl/crc_pkg.vhd) | `crc_pkg` | package | Component declarations of `crc_core` and `sbi_crc` |
+| [hdl/crc_pkg.vhd](hdl/crc_pkg.vhd) | `crc_pkg` | package | Component declarations of `crc_core` and `sbi_crc`, default polynomial `crc_default_polynom` |
 | [hdl/crc_core.vhd](hdl/crc_core.vhd) | `crc_core` | entity | Combinational CRC engine (architecture `combi_based`) |
 | [hdl/sbi_crc.vhd](hdl/sbi_crc.vhd) | `sbi_crc` | entity | Top-level: `CRC_registers` + raw CRC register + `crc_core`; asserts `WIDTH_CRC <= 16` and `WIDTH_DATA <= 16` |
 | hdl/csr/crc_csr.vhd | `CRC_registers` | entity | Generated CSR bank (regtool) |
@@ -161,8 +161,8 @@ The CSR bank uses 2 address bits (`CRC_ADDR_WIDTH = 2`) and 8-bit data (`CRC_DAT
 |------|------|---------|-------------|
 | `WIDTH_CRC` | positive | `16` | CRC width |
 | `WIDTH_DATA` | positive | `8` | Data width |
-| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `x"1021"` | Polynomial without the implicit MSB |
-| `SHIFT_LEFT` | boolean | `false` | Shift direction (see top-level) |
+| `POLYNOM` | std_logic_vector(WIDTH_CRC-1 downto 0) | `crc_default_polynom(WIDTH_CRC)` | Polynomial without the implicit MSB (default: 0x07 / 0x1021 / 0x04C11DB7 for 8 / 16 / 32 bits, other widths must set it) |
+| `SHIFT_LEFT` | boolean | `true` | Shift direction (see top-level) |
 | `LSB_FIRST` | boolean | `false` | Data bit order |
 | `POLYNOM_REVERSE` | boolean | `false` | Use the bit-reversed polynomial |
 | `REFLECT_IN` | boolean | `false` | Reflect the input data |
@@ -200,7 +200,7 @@ Notes:
 | File | DUT | Description |
 |------|-----|-------------|
 | [sim/tb_crc_pkg.vhd](sim/tb_crc_pkg.vhd) | - | Table `C_CRC_CFG` of `sbi_crc` configurations, each one linked to a CRC of the standard catalogue (Rocksoft parameters + check value of `"123456789"`), and a bit-serial Rocksoft reference model (`crc_model*`, independent of `crc_core`) |
-| [sim/tb_crc.vhd](sim/tb_crc.vhd) | `sbi_crc` | UVVM testbench with the SBI VIP, configuration selected by the generic `CFG`. T1 reset values (`data*` = 0, `crc1:crc0` = `XOR_OUT`), T2 register read/write (`crc*` write raw / read final, bits above `WIDTH_CRC` ignored), T3 reference model against the catalogue check value, T4 DUT CRC of `"123456789"` with the intermediate CRC checked after every word, T5 latency (previous CRC in the cycle following the `data0` write, new CRC one cycle later), T6 priority of a software `crc0` write over the update, T7 32 random messages (1 to 16 words, random seed, garbage in unused `data1` / seed bits), T8 asynchronous reset. 108 checks per configuration (96 for `WIDTH_DATA = 16`) |
+| [sim/tb_crc.vhd](sim/tb_crc.vhd) | `sbi_crc` | UVVM testbench with the SBI VIP, configuration selected by the generic `CFG`. T0 two `crc_core` instances with the default generics (CRC-16/XMODEM check value 0x31C3, and CRC-8/SMBUS 0xF4 with `WIDTH_CRC = 8` only), T1 reset values (`data*` = 0, `crc1:crc0` = `XOR_OUT`), T2 register read/write (`crc*` write raw / read final, bits above `WIDTH_CRC` ignored), T3 reference model against the catalogue check value, T4 DUT CRC of `"123456789"` with the intermediate CRC checked after every word, T5 latency (previous CRC in the cycle following the `data0` write, new CRC one cycle later), T6 priority of a software `crc0` write over the update, T7 32 random messages (1 to 16 words, random seed, garbage in unused `data1` / seed bits), T8 asynchronous reset. 110 checks per configuration (98 for `WIDTH_DATA = 16`) |
 
 | `CFG` | Configuration | `SHIFT_LEFT` | `LSB_FIRST` | `POLYNOM_REVERSE` | `REFLECT_IN` | `REFLECT_OUT` | `XOR_OUT` | Seed | Check |
 |-------|---------------|--------------|-------------|-------------------|--------------|---------------|-----------|------|-------|
@@ -267,6 +267,8 @@ For each of the `WIDTH_DATA` bits (order set by `LSB_FIRST`, after optional `REF
 - `SHIFT_LEFT = false`: `fb = crc(0) xor d(bit)`, `crc = (crc >> 1) xor (fb ? POLY : 0)`
 
 with `POLY = POLYNOM` or its bit-reversed value (`POLYNOM_REVERSE`). This raw value (`crc_next_o`) is stored; the final CRC (`crc_o`, read value of `crc1:crc0`) is the raw register optionally reflected (`REFLECT_OUT`) and XORed with `XOR_OUT`.
+
+Default generics: `SHIFT_LEFT = true`, MSB first, no reflection, no `XOR_OUT`, and `POLYNOM = crc_default_polynom(WIDTH_CRC)`. With the reset seed 0 this is CRC-16/XMODEM (CRC-16/CCITT-FALSE with the seed 0xFFFF) for 16 bits and CRC-8/SMBUS for 8 bits; other widths have no default polynomial (elaboration failure with an explicit message). Up to version 1.1.0 the defaults were `POLYNOM = x"1021"` (16-bit literal, so any other `WIDTH_CRC` without `POLYNOM` failed to elaborate with a length mismatch) and `SHIFT_LEFT = false`: a right shift with the non-reflected polynomial and data MSB first, which matches no CRC of the catalogue. `crc_core` reports a warning for this unusual combination (`SHIFT_LEFT = false`, `LSB_FIRST = false`, `REFLECT_IN = false`), which only gives a standard CRC with a reflected polynomial, a reflected seed and `REFLECT_OUT`.
 
 Common conventions:
 

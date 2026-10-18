@@ -29,13 +29,14 @@ use     IEEE.numeric_std.ALL;
 
 library asylum;
 use     asylum.logic_pkg.all;
+use     asylum.crc_pkg.all;
 
 entity crc_core is
   generic (
     WIDTH_CRC       : positive := 16;
     WIDTH_DATA      : positive := 8;
-    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
-    SHIFT_LEFT      : boolean := false;                                         -- TRUE = shift left, FALSE = shift right
+    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := crc_default_polynom(WIDTH_CRC); -- see crc_default_polynom
+    SHIFT_LEFT      : boolean := true;                                          -- TRUE = shift left, FALSE = shift right
     LSB_FIRST       : boolean := false;                                         -- TRUE = process LSB first, FALSE = MSB first
     POLYNOM_REVERSE : boolean := false;                                         -- TRUE = reverse polynomial bits
     REFLECT_IN      : boolean := false;                                         -- TRUE = reflect input data bits
@@ -56,6 +57,17 @@ architecture combi_based of crc_core is
   constant POLYNOM_USED : std_logic_vector(WIDTH_CRC-1 downto 0) := mux2(POLYNOM_REVERSE,reverse_bits(POLYNOM),POLYNOM);
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- Parameters checks
+  -----------------------------------------------------------------------------
+  -- Shift right (reflected register) with data MSB first : this matches a CRC
+  -- of the catalogue only with a reflected POLYNOM (or POLYNOM_REVERSE), a
+  -- reflected seed and REFLECT_OUT (e.g. the former default generics computed
+  -- no standard CRC). Usual reflected CRC : LSB_FIRST or REFLECT_IN.
+  assert SHIFT_LEFT or LSB_FIRST or REFLECT_IN
+    report "crc_core : SHIFT_LEFT=false with data MSB first (LSB_FIRST=false, REFLECT_IN=false) : unusual configuration, check POLYNOM / seed / REFLECT_OUT"
+    severity warning;
 
   process(all)
     variable crc_var      : std_logic_vector(WIDTH_CRC-1 downto 0);
