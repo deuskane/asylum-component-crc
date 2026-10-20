@@ -1,4 +1,6 @@
 default                   : Default Target
+lint_ghdl                 : Lint with GHDL (-Wall analysis and elaboration of sbi_crc)
+lint_ghdl_synth           : Synthesis check, ghdl --synth -Wall of sbi_crc (6 configurations)
 sim_crc16_arc             : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005, shift left, REFLECT_IN/OUT)
 sim_crc16_arc_shift_right : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005 reversed, shift right, REFLECT_IN)
 sim_crc16_ccitt_false     : Simulation of sbi_crc with VIP - CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF)

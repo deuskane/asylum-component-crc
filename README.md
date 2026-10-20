@@ -230,6 +230,8 @@ Notes:
 | `sim_crc16_arc_shift_right` | `tb_crc` | `CFG=7`: CRC-16/ARC, shift right with `POLYNOM_REVERSE` and `REFLECT_IN` |
 | `sim_crc5_usb` | `tb_crc` | `CFG=8`: CRC-5/USB (`WIDTH_CRC = 5`) |
 | `sim_crc16_xmodem_data16` | `tb_crc` | `CFG=9`: CRC-16/XMODEM with `WIDTH_DATA = 16` |
+| `lint_ghdl` | `sbi_crc_synth_top` | Lint: GHDL `-Wall` analysis and elaboration (empty simulation) of `sbi_crc` in a wrapper with flat SBI ports (`syn/ghdl/sbi_crc_synth_top.vhd`) |
+| `lint_ghdl_synth` | `sbi_crc_synth_top` | Synthesis check: `lint_ghdl`, then `ghdl --synth -Wall` of 6 configurations (`syn/ghdl/ghdl_synth.sh`: defaults, CRC-8/SMBUS, CRC-16/MODBUS (PicoSoC), CRC-16/ARC shift right, CRC-5/USB, `WIDTH_DATA = 16`), fails on a synthesis error or an inferred latch |
 
 All simulation targets pass (`>> Simulation SUCCESS`) with GHDL. `WIDTH_CRC` / `WIDTH_DATA` above 16 are rejected by an assertion of `sbi_crc` (not simulated).
 
@@ -242,6 +244,8 @@ make help                          # variables, rules and target list (mk/target
 make sim_crc16_x25                 # run one target (log in log/)
 make nonreg_sim                    # run every sim_* target
 make TARGETS_FILTER=crc16 nonreg_sim   # run a filtered subset
+make lint_ghdl                     # GHDL -Wall lint (make nonreg_lint: every lint_* target)
+make lint_ghdl_synth               # GHDL -Wall lint + ghdl --synth -Wall check
 make clean                         # remove build/ and log/
 ```
 
@@ -255,7 +259,7 @@ CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs every `sim_*` tar
 
 ## Synthesis
 
-No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; they are VHDL-2008 (`process(all)`, conditional variable assignments in `crc_core`). `crc_core` is an unrolled XOR network whose size grows with `WIDTH_DATA x WIDTH_CRC`; the CSR bank is fixed (two 8-bit data registers) plus the 16-bit raw CRC register of `sbi_crc`; `crc_o` adds a `WIDTH_CRC`-bit XOR on the read path.
+No vendor synthesis target (`lint_ghdl_synth` checks the RTL with `ghdl --synth`, see [Targets](#targets)). The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; they are VHDL-2008 (`process(all)`, conditional variable assignments in `crc_core`). `crc_core` is an unrolled XOR network whose size grows with `WIDTH_DATA x WIDTH_CRC`; the CSR bank is fixed (two 8-bit data registers) plus the 16-bit raw CRC register of `sbi_crc`; `crc_o` adds a `WIDTH_CRC`-bit XOR on the read path.
 
 ## Design Notes
 
@@ -300,6 +304,9 @@ asylum-component-crc/
 ├── sim/
 │   ├── tb_crc_pkg.vhd      # Configurations + reference model
 │   └── tb_crc.vhd          # UVVM testbench
+├── syn/ghdl/
+│   ├── sbi_crc_synth_top.vhd  # Lint / synthesis check top (flat SBI ports)
+│   └── ghdl_synth.sh       # ghdl --synth check (post_run hook of lint_ghdl_synth)
 └── hdl/
     ├── crc_pkg.vhd
     ├── crc_core.vhd
