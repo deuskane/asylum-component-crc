@@ -9,7 +9,7 @@
 
 //==================================
 // Register    : data0
-// Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+// Description : Data byte 0 - a write of data0 processes data1:data0 in the write cycle (new CRC readable by the next access)
 // Address     : 0x0
 //==================================
 #define CRC_DATA0 0x0

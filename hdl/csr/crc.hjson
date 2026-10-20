@@ -11,9 +11,10 @@
         {
             name         : "data0",
             address      : "x0",
-            desc         : "Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)",
+            desc         : "Data byte 0 - a write of data0 processes data1:data0 in the write cycle (new CRC readable by the next access)",
             swaccess     : "rw",
-            hwaccess     : "ro",
+            hwaccess     : "rw",
+            hwtype       : "ext",
             fields: [
                 {
                     name: "value",

@@ -63,6 +63,7 @@ architecture rtl of sbi_crc is
   signal hw2sw       : crc_hw2sw_t;
 
   signal data        : std_logic_vector(2*CRC_DATA_WIDTH-1 downto 0);
+  signal data0_r     : std_logic_vector(  CRC_DATA_WIDTH-1 downto 0); -- data0 read back
   signal crc_r       : std_logic_vector(2*CRC_DATA_WIDTH-1 downto 0); -- Raw CRC register
   signal crc_next    : std_logic_vector(WIDTH_CRC-1 downto 0);        -- Raw CRC register after data
   signal crc_final   : std_logic_vector(WIDTH_CRC-1 downto 0);        -- Final CRC (REFLECT_OUT then XOR_OUT)
@@ -94,15 +95,36 @@ begin  -- architecture rtl
     hw2sw_i          => hw2sw   
   );
 
-  -- Get Data
+  -- Get Data : data0 is an "ext" register, sw2hw.data0.value is the bus
+  -- write data, valid with sw2hw.data0.we (write cycle)
   data             <= sw2hw.data1.value &
                       sw2hw.data0.value ;
 
   -----------------------------------------------------------------------------
+  -- data0 register (software read back only)
+  -----------------------------------------------------------------------------
+  process(clk_i, arst_b_i) is
+  begin
+    if arst_b_i = '0'
+    then
+      data0_r <= (others => '0');
+    elsif rising_edge(clk_i)
+    then
+      if sw2hw.data0.we = '1'
+      then
+        data0_r <= sw2hw.data0.value;
+      end if;
+    end if;
+  end process;
+
+  hw2sw.data0.we    <= '0'; -- unused by csr_ext
+  hw2sw.data0.value <= data0_r;
+
+  -----------------------------------------------------------------------------
   -- Raw CRC register
   -- * Software write of crc0 / crc1 : set the register (seed)
-  -- * One cycle after the software write of data0 : next CRC
-  --   (software write has the priority)
+  -- * Software write of data0 : next CRC, computed in the write cycle (the
+  --   next access reads the new CRC)
   -----------------------------------------------------------------------------
   process(clk_i, arst_b_i) is
   begin

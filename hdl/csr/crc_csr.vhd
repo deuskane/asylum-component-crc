@@ -160,12 +160,12 @@ begin  -- architecture rtl
   generate
   --==================================
   -- Register    : data0
-  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 in the write cycle (new CRC readable by the next access)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
-  -- Hw Access   : ro
-  -- Hw Type     : reg
+  -- Hw Access   : rw
+  -- Hw Type     : ext
   --==================================
   --==================================
   -- Field       : value
@@ -191,13 +191,12 @@ begin  -- architecture rtl
     data0_we      <= sig_wcs and sig_we and data0_wcs;
     data0_wdata   <= sig_wdata;
     data0_wdata_sw(7 downto 0) <= data0_wdata(7 downto 0); -- value
+    data0_wdata_hw(7 downto 0) <= hw2sw_i.data0.value; -- value
     sw2hw_o.data0.value <= data0_rdata_hw(7 downto 0); -- value
 
-    ins_data0 : csr_reg
+    ins_data0 : csr_ext
       generic map
         (WIDTH         => 8
-        ,INIT          => INIT_data0
-        ,MODEL         => "rw"
         )
       port map
         (clk_i         => clk_i
@@ -208,9 +207,9 @@ begin  -- architecture rtl
         ,sw_re_i       => data0_re
         ,sw_rbusy_o    => data0_rbusy
         ,sw_wbusy_o    => data0_wbusy
-        ,hw_wd_i       => (others => '0')
+        ,hw_wd_i       => data0_wdata_hw
         ,hw_rd_o       => data0_rdata_hw
-        ,hw_we_i       => '0'
+        ,hw_we_i       => hw2sw_i.data0.we
         ,hw_sw_re_o    => sw2hw_o.data0.re
         ,hw_sw_we_o    => sw2hw_o.data0.we
         );

@@ -154,10 +154,9 @@ begin
       wr(CRC_DATA0, word( 7 downto 0), msg & " (data0)");
     end procedure;
 
-    -- Wait the cycle of computation, then read crc1:crc0
+    -- Read crc1:crc0 (no wait : the CRC is updated in the data0 write cycle)
     procedure dut_check(constant exp : in t_slv16; constant msg : in string) is
     begin
-      wait until rising_edge(clk_i);
       chk(CRC_CRC0, exp( 7 downto 0), msg & " (crc0)");
       chk(CRC_CRC1, exp(15 downto 8), msg & " (crc1)");
     end procedure;
@@ -236,7 +235,7 @@ begin
     end if;
 
     -------------------------------------------------------------------------
-    log(ID_LOG_HDR, "T5 : Latency : result readable one cycle after the data0 write", C_SCOPE);
+    log(ID_LOG_HDR, "T5 : Latency : result readable by the access following the data0 write", C_SCOPE);
     -------------------------------------------------------------------------
     v_init  := C_CFG.ref_init;
     v_old   := crc_model_final(C_CFG, v_init);
@@ -253,21 +252,22 @@ begin
     dut_set (dut_seed(C_CFG, v_init), "Seed");
     wr (CRC_DATA1, v_word(15 downto 8), "Write data1");
     wr (CRC_DATA0, v_word( 7 downto 0), "Write data0");
-    -- Read access in the cycle following the data0 write : previous CRC
-    chk(CRC_CRC0, v_old( 7 downto 0), "crc0 read just after the data0 write : previous value");
-    -- One cycle later : new CRC
-    chk(CRC_CRC0, v_exp( 7 downto 0), "crc0 read one cycle later : new value");
-    chk(CRC_CRC1, v_exp(15 downto 8), "crc1 read one cycle later : new value");
+    -- Read access in the cycle following the data0 write : new CRC (v_old /= v_exp)
+    chk(CRC_CRC0, v_exp( 7 downto 0), "crc0 read just after the data0 write : new value");
+    chk(CRC_CRC1, v_exp(15 downto 8), "crc1 read after the data0 write : new value");
+    chk(CRC_CRC0, v_exp( 7 downto 0), "crc0 read again : new value");
 
     -------------------------------------------------------------------------
-    log(ID_LOG_HDR, "T6 : Software write of crc0 in the update cycle has the priority", C_SCOPE);
+    log(ID_LOG_HDR, "T6 : Software write of crc0 just after a data0 write : the update is not lost", C_SCOPE);
     -------------------------------------------------------------------------
     dut_set(x"0000", "Seed 0");
     v_word := x"00A5";
-    wr (CRC_DATA0, v_word(7 downto 0), "Write data0");
-    wr (CRC_CRC0 , x"3C"             , "Write crc0 in the update cycle");
-    -- update discarded : raw = 0x003C
-    dut_check(dut_final(C_CFG, x"003C"), "Raw register = written value, update discarded");
+    dut_word(v_word, "Write data1, data0");
+    wr (CRC_CRC0 , x"3C"             , "Write crc0 just after data0");
+    -- raw register : update by data0, then bits 7:0 overwritten by crc0
+    v_crc             := dut_seed(C_CFG, crc_model_step(C_CFG, x"0000", v_word));
+    v_crc(7 downto 0) := x"3C";
+    dut_check(dut_final(C_CFG, v_crc), "Raw register = data0 update, then crc0 written");
 
     -------------------------------------------------------------------------
     log(ID_LOG_HDR, "T7 : " & integer'image(C_NB_MSG) & " random messages, random init, garbage in unused bits", C_SCOPE);
