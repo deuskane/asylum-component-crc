@@ -52,7 +52,7 @@ filesets:
     file_type    : vhdlSource-2008
     logical_name : asylum
     depend       :
-      - asylum:utils:generators
+      - ">=asylum:utils:generators:2.8.0"
       - asylum:utils:pkg
 
   #---------------------------------------
@@ -66,13 +66,12 @@ filesets:
       - bitvis:verification:uvvm
 
   #---------------------------------------
-  # Lint Files (post_run hook of lint_ghdl_synth)
+  syn:
   #---------------------------------------
-  files_lint:
-    files:
-      - syn/ghdl/sbi_crc_synth_top.vhd
-      - syn/ghdl/ghdl_synth.sh : {file_type : user, copyto : ghdl_synth.sh}
-    file_type : vhdlSource-2008
+    files        :
+      - syn/sbi_crc_wrapper.vhd
+    file_type    : vhdlSource-2008
+    logical_name : asylum
 
 #=========================================
 targets:
@@ -92,31 +91,83 @@ targets:
   #---------------------------------------
   # Lint : -Wall analysis and elaboration (empty simulation)
   #---------------------------------------
-  lint_ghdl :
+  lint_ghdl : &lint_ghdl
     << : *default
-    description     : Lint with GHDL (-Wall analysis and elaboration of sbi_crc_synth_top)
-    toplevel        : sbi_crc_synth_top
-    filesets_append : [files_lint]
+    description     : Lint with GHDL (-Wall analysis and elaboration of sbi_crc_wrapper)
+    toplevel        : asylum.sbi_crc_wrapper
+    filesets_append : [syn]
     default_tool    : ghdl
     tools :
       ghdl :
         analyze_options : ["-Wall"]
 
   #---------------------------------------
-  # Synthesis check : lint_ghdl, then ghdl --synth -Wall of sbi_crc_synth_top
-  # for each configuration of syn/ghdl/ghdl_synth.sh (post_run hook)
+  # Synthesis check : -Wall analysis, ghdl --synth -Wall and elaboration
+  # (no simulation) of sbi_crc_wrapper with the generics of the target.
+  # The pre_run hook (ghdl_synth.sh of asylum:utils:generators) adds
+  # ghdl_synth.mk to the edalize Makefile.
+  # FuseSoC merges tools in depth : analyze_options comes from lint_ghdl.
   #---------------------------------------
-  lint_ghdl_synth :
-    << : *default
-    description     : Synthesis check, ghdl --synth -Wall of sbi_crc_synth_top (6 configurations)
-    toplevel        : sbi_crc_synth_top
-    filesets_append : [files_lint]
-    default_tool    : ghdl
+  lint_ghdl_synth_default : &lint_ghdl_synth
+    << : *lint_ghdl
+    description     : Synthesis check of sbi_crc_wrapper, default generics
     tools :
       ghdl :
-        analyze_options : ["-Wall"]
+        run_options     : ["--no-run"]
     hooks :
-      post_run : [ghdl_synth]
+      pre_run : [ghdl_synth]
+
+  #---------------------------------------
+  lint_ghdl_synth_crc8_smbus :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_crc_wrapper, CRC-8/SMBUS
+    parameters      :
+      - WIDTH_CRC=8
+      - POLYNOM=00000111
+      - SHIFT_LEFT=true
+      - XOR_OUT=00000000
+
+  #---------------------------------------
+  lint_ghdl_synth_crc16_modbus :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_crc_wrapper, CRC-16/MODBUS (PicoSoC)
+    parameters      :
+      - POLYNOM=1010000000000001
+      - LSB_FIRST=true
+
+  #---------------------------------------
+  lint_ghdl_synth_crc16_arc_right :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_crc_wrapper, CRC-16/ARC shift right
+    parameters      :
+      - POLYNOM=1000000000000101
+      - POLYNOM_REVERSE=true
+      - REFLECT_IN=true
+
+  #---------------------------------------
+  lint_ghdl_synth_crc5_usb :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_crc_wrapper, CRC-5/USB
+    parameters      :
+      - WIDTH_CRC=5
+      - POLYNOM=00101
+      - SHIFT_LEFT=true
+      - REFLECT_IN=true
+      - REFLECT_OUT=true
+      - XOR_OUT=11111
+
+  #---------------------------------------
+  lint_ghdl_synth_crc16_data16 :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_crc_wrapper, WIDTH_DATA 16
+    parameters      :
+      - WIDTH_DATA=16
+      - SHIFT_LEFT=true
 
   #---------------------------------------
   sim_crc8_smbus:
@@ -283,7 +334,7 @@ scripts:
 #=========================================
 
   #---------------------------------------
-  # Hook of lint_ghdl_synth (cwd = work_root)
+  # pre_run hook of lint_ghdl_synth_* (cwd = work_root)
   #---------------------------------------
   ghdl_synth :
     cmd : [bash, ghdl_synth.sh]
@@ -296,4 +347,61 @@ parameters :
     description : Index of the sbi_crc configuration in tb_crc_pkg.C_CRC_CFG
     datatype    : int
     default     : 2
+    paramtype   : generic
+
+  #---------------------------------------
+  # Generics of sbi_crc_wrapper (lint_ghdl_synth_*)
+  #---------------------------------------
+  WIDTH_CRC :
+    description : CRC width
+    datatype    : int
+    default     : 16
+    paramtype   : generic
+
+  WIDTH_DATA :
+    description : Data width
+    datatype    : int
+    default     : 8
+    paramtype   : generic
+
+  POLYNOM :
+    description : Polynomial (WIDTH_CRC-bit string)
+    datatype    : str
+    default     : "0001000000100001"
+    paramtype   : generic
+
+  SHIFT_LEFT :
+    description : Shift left
+    datatype    : bool
+    default     : false
+    paramtype   : generic
+
+  LSB_FIRST :
+    description : LSB first
+    datatype    : bool
+    default     : false
+    paramtype   : generic
+
+  POLYNOM_REVERSE :
+    description : Reversed polynomial
+    datatype    : bool
+    default     : false
+    paramtype   : generic
+
+  REFLECT_IN :
+    description : Reflect the input data
+    datatype    : bool
+    default     : false
+    paramtype   : generic
+
+  REFLECT_OUT :
+    description : Reflect the output CRC
+    datatype    : bool
+    default     : false
+    paramtype   : generic
+
+  XOR_OUT :
+    description : Final XOR value (WIDTH_CRC-bit string)
+    datatype    : str
+    default     : "0000000000000000"
     paramtype   : generic
