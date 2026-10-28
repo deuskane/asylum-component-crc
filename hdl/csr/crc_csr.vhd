@@ -62,7 +62,6 @@ architecture rtl of CRC_registers is
   signal   data0_we        : std_logic;
   signal   data0_wdata     : std_logic_vector(8-1 downto 0);
   signal   data0_wdata_sw  : std_logic_vector(8-1 downto 0);
-  signal   data0_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data0_wbusy     : std_logic;
 
   signal   data0_rcs       : std_logic;
@@ -84,7 +83,6 @@ architecture rtl of CRC_registers is
   signal   data1_we        : std_logic;
   signal   data1_wdata     : std_logic_vector(8-1 downto 0);
   signal   data1_wdata_sw  : std_logic_vector(8-1 downto 0);
-  signal   data1_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data1_wbusy     : std_logic;
 
   signal   data1_rcs       : std_logic;
@@ -93,14 +91,6 @@ architecture rtl of CRC_registers is
   signal   data1_rdata_sw  : std_logic_vector(8-1 downto 0);
   signal   data1_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data1_rbusy     : std_logic;
-
-  function INIT_crc0
-    return std_logic_vector is
-    variable tmp : std_logic_vector(8-1 downto 0);
-  begin  -- function INIT_crc0
-    tmp(7 downto 0) := "00000000"; -- value
-    return tmp;
-  end function INIT_crc0;
 
   signal   crc0_wcs       : std_logic;
   signal   crc0_we        : std_logic;
@@ -115,14 +105,6 @@ architecture rtl of CRC_registers is
   signal   crc0_rdata_sw  : std_logic_vector(8-1 downto 0);
   signal   crc0_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   crc0_rbusy     : std_logic;
-
-  function INIT_crc1
-    return std_logic_vector is
-    variable tmp : std_logic_vector(8-1 downto 0);
-  begin  -- function INIT_crc1
-    tmp(7 downto 0) := "00000000"; -- value
-    return tmp;
-  end function INIT_crc1;
 
   signal   crc1_wcs       : std_logic;
   signal   crc1_we        : std_logic;
@@ -177,15 +159,15 @@ begin  -- architecture rtl
     data0_rcs     <= '1' when (sig_raddr = CRC_DATA0) else '0';
     data0_re      <= sig_rcs and sig_re and data0_rcs;
     data0_rdata   <= (
-      0 => data0_rdata_sw(0), -- value(0)
-      1 => data0_rdata_sw(1), -- value(1)
-      2 => data0_rdata_sw(2), -- value(2)
-      3 => data0_rdata_sw(3), -- value(3)
-      4 => data0_rdata_sw(4), -- value(4)
-      5 => data0_rdata_sw(5), -- value(5)
-      6 => data0_rdata_sw(6), -- value(6)
-      7 => data0_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => data0_rdata_sw(0) -- value(0)
+      ,1 => data0_rdata_sw(1) -- value(1)
+      ,2 => data0_rdata_sw(2) -- value(2)
+      ,3 => data0_rdata_sw(3) -- value(3)
+      ,4 => data0_rdata_sw(4) -- value(4)
+      ,5 => data0_rdata_sw(5) -- value(5)
+      ,6 => data0_rdata_sw(6) -- value(6)
+      ,7 => data0_rdata_sw(7) -- value(7)
+      );
 
     data0_wcs     <= '1' when       (sig_waddr = CRC_DATA0)   else '0';
     data0_we      <= sig_wcs and sig_we and data0_wcs;
@@ -250,15 +232,15 @@ begin  -- architecture rtl
     data1_rcs     <= '1' when (sig_raddr = CRC_DATA1) else '0';
     data1_re      <= sig_rcs and sig_re and data1_rcs;
     data1_rdata   <= (
-      0 => data1_rdata_sw(0), -- value(0)
-      1 => data1_rdata_sw(1), -- value(1)
-      2 => data1_rdata_sw(2), -- value(2)
-      3 => data1_rdata_sw(3), -- value(3)
-      4 => data1_rdata_sw(4), -- value(4)
-      5 => data1_rdata_sw(5), -- value(5)
-      6 => data1_rdata_sw(6), -- value(6)
-      7 => data1_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => data1_rdata_sw(0) -- value(0)
+      ,1 => data1_rdata_sw(1) -- value(1)
+      ,2 => data1_rdata_sw(2) -- value(2)
+      ,3 => data1_rdata_sw(3) -- value(3)
+      ,4 => data1_rdata_sw(4) -- value(4)
+      ,5 => data1_rdata_sw(5) -- value(5)
+      ,6 => data1_rdata_sw(6) -- value(6)
+      ,7 => data1_rdata_sw(7) -- value(7)
+      );
 
     data1_wcs     <= '1' when       (sig_waddr = CRC_DATA1)   else '0';
     data1_we      <= sig_wcs and sig_we and data1_wcs;
@@ -323,15 +305,15 @@ begin  -- architecture rtl
     crc0_rcs     <= '1' when (sig_raddr = CRC_CRC0) else '0';
     crc0_re      <= sig_rcs and sig_re and crc0_rcs;
     crc0_rdata   <= (
-      0 => crc0_rdata_sw(0), -- value(0)
-      1 => crc0_rdata_sw(1), -- value(1)
-      2 => crc0_rdata_sw(2), -- value(2)
-      3 => crc0_rdata_sw(3), -- value(3)
-      4 => crc0_rdata_sw(4), -- value(4)
-      5 => crc0_rdata_sw(5), -- value(5)
-      6 => crc0_rdata_sw(6), -- value(6)
-      7 => crc0_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => crc0_rdata_sw(0) -- value(0)
+      ,1 => crc0_rdata_sw(1) -- value(1)
+      ,2 => crc0_rdata_sw(2) -- value(2)
+      ,3 => crc0_rdata_sw(3) -- value(3)
+      ,4 => crc0_rdata_sw(4) -- value(4)
+      ,5 => crc0_rdata_sw(5) -- value(5)
+      ,6 => crc0_rdata_sw(6) -- value(6)
+      ,7 => crc0_rdata_sw(7) -- value(7)
+      );
 
     crc0_wcs     <= '1' when       (sig_waddr = CRC_CRC0)   else '0';
     crc0_we      <= sig_wcs and sig_we and crc0_wcs;
@@ -395,15 +377,15 @@ begin  -- architecture rtl
     crc1_rcs     <= '1' when (sig_raddr = CRC_CRC1) else '0';
     crc1_re      <= sig_rcs and sig_re and crc1_rcs;
     crc1_rdata   <= (
-      0 => crc1_rdata_sw(0), -- value(0)
-      1 => crc1_rdata_sw(1), -- value(1)
-      2 => crc1_rdata_sw(2), -- value(2)
-      3 => crc1_rdata_sw(3), -- value(3)
-      4 => crc1_rdata_sw(4), -- value(4)
-      5 => crc1_rdata_sw(5), -- value(5)
-      6 => crc1_rdata_sw(6), -- value(6)
-      7 => crc1_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => crc1_rdata_sw(0) -- value(0)
+      ,1 => crc1_rdata_sw(1) -- value(1)
+      ,2 => crc1_rdata_sw(2) -- value(2)
+      ,3 => crc1_rdata_sw(3) -- value(3)
+      ,4 => crc1_rdata_sw(4) -- value(4)
+      ,5 => crc1_rdata_sw(5) -- value(5)
+      ,6 => crc1_rdata_sw(6) -- value(6)
+      ,7 => crc1_rdata_sw(7) -- value(7)
+      );
 
     crc1_wcs     <= '1' when       (sig_waddr = CRC_CRC1)   else '0';
     crc1_we      <= sig_wcs and sig_we and crc1_wcs;
