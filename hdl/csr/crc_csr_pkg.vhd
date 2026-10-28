@@ -23,12 +23,12 @@ package CRC_csr_pkg is
 
   --==================================
   -- Register    : data0
-  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 in the write cycle (new CRC readable by the next access)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
-  -- Hw Access   : ro
-  -- Hw Type     : reg
+  -- Hw Access   : rw
+  -- Hw Type     : ext
   --==================================
   constant CRC_DATA0 : unsigned(CRC_ADDR_WIDTH-1 downto 0) := to_unsigned(0, CRC_ADDR_WIDTH);
 
@@ -42,6 +42,16 @@ package CRC_csr_pkg is
   --==================================
     value : std_logic_vector(8-1 downto 0);
   end record CRC_data0_sw2hw_t;
+
+  type CRC_data0_hw2sw_t is record
+    we : std_logic;
+  --==================================
+  -- Field       : value
+  -- Description : Data Byte 0
+  -- Width       : 8
+  --==================================
+    value : std_logic_vector(8-1 downto 0);
+  end record CRC_data0_hw2sw_t;
 
   --==================================
   -- Register    : data1
@@ -140,6 +150,7 @@ package CRC_csr_pkg is
   end record CRC_sw2hw_t;
 
   type CRC_hw2sw_t is record
+    data0 : CRC_data0_hw2sw_t;
     crc0 : CRC_crc0_hw2sw_t;
     crc1 : CRC_crc1_hw2sw_t;
   end record CRC_hw2sw_t;

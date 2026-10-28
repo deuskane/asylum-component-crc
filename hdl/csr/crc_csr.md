@@ -9,7 +9,7 @@ CSR for CRC
 |0x3|crc1|
 
 ## 0x0 data0
-Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+Data byte 0 - a write of data0 processes data1:data0 in the write cycle (new CRC readable by the next access)
 
 ### [7:0] value
 Data Byte 0
