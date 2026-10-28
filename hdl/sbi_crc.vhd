@@ -38,8 +38,8 @@ entity sbi_crc is
     NAME            : string  := "";
     WIDTH_CRC       : positive := 16;
     WIDTH_DATA      : positive :=  8;
-    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := x"1021";
-    SHIFT_LEFT      : boolean := false;                                         -- TRUE = shift left, FALSE = shift right
+    POLYNOM         : std_logic_vector(WIDTH_CRC-1 downto 0) := crc_default_polynom(WIDTH_CRC); -- see crc_default_polynom
+    SHIFT_LEFT      : boolean := true;                                          -- TRUE = shift left, FALSE = shift right
     LSB_FIRST       : boolean := false;                                         -- TRUE = process LSB first, FALSE = MSB first
     POLYNOM_REVERSE : boolean := false;                                         -- TRUE = reverse polynomial bits
     REFLECT_IN      : boolean := false;                                         -- TRUE = reflect input data bits
