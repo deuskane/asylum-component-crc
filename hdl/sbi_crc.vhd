@@ -101,7 +101,9 @@ begin  -- architecture rtl
   -----------------------------------------------------------------------------
   -- Raw CRC register
   -- * Software write of crc0 / crc1 : set the register (seed)
-  -- * One cycle after the software write of data0 : next CRC
+  -- * One cycle after the software write of data0 : next CRC. data0 has
+  --   one write wait state (wr_wait_state) : the update is done in the
+  --   second cycle of the data0 access, the next access reads the new CRC
   --   (software write has the priority)
   -----------------------------------------------------------------------------
   process(clk_i, arst_b_i) is
