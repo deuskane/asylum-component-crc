@@ -57,7 +57,7 @@ architecture rtl of CRC_registers is
 
   --==================================
   -- Register    : data0
-  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 (one wait state : the new CRC is readable by the next access)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
@@ -160,7 +160,7 @@ begin  -- architecture rtl
 
   --==================================
   -- Register    : data0
-  -- Description : Data byte 0 - a write of data0 processes data1:data0 (result readable one cycle later)
+  -- Description : Data byte 0 - a write of data0 processes data1:data0 (one wait state : the new CRC is readable by the next access)
   -- Address     : 0x0
   -- Width       : 8
   -- Sw Access   : rw
@@ -186,9 +186,10 @@ begin  -- architecture rtl
     sw2hw_o.data0.value <= data0_rdata_hw(7 downto 0);
     ins_data0 : csr_reg
       generic map
-        (WIDTH => 8
-        ,INIT  => INIT_data0
-        ,MODEL => "rw"
+        (WIDTH         => 8
+        ,INIT          => INIT_data0
+        ,MODEL         => "rw"
+        ,WR_WAIT_STATE => 1
         )
       port map
         (clk_i      => clk_i

@@ -52,7 +52,7 @@ filesets:
     file_type    : vhdlSource-2008
     logical_name : asylum
     depend       :
-      - ">=asylum:utils:generators:2.8.0"
+      - ">=asylum:utils:generators:2.10.0"
       - asylum:utils:pkg
 
   #---------------------------------------
