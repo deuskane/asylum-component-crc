@@ -40,7 +40,7 @@
 
 **Configurable CRC calculator (polynomial, bit order, shift direction, reflection, output XOR) with CSR access over the SBI bus.**
 
-VLNV: `asylum:component:crc:1.1.0`
+VLNV: `asylum:component:crc:1.2.0`
 
 ## Table of Contents
 
@@ -264,7 +264,7 @@ make clean                         # remove build/ and log/
 Equivalent FuseSoC command:
 
 ```bash
-fusesoc --cores-root . run --build-root build --target sim_crc16_x25 asylum:component:crc:1.1.0
+fusesoc --cores-root . run --build-root build --target sim_crc16_x25 asylum:component:crc:1.2.0
 ```
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs every `sim_*` target.

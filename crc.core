@@ -19,9 +19,11 @@ CAPI=2:
 # 2026-10-05  1.1.0    mrosiere Fix multi-word CRC with REFLECT_OUT/XOR_OUT (raw register
 #                               in sbi_crc, crc0/crc1 ext CSR, crc_core port crc_o),
 #                               add UVVM testbench and sim targets
+# 2026-11-16  1.2.0    mrosiere data0 : one write wait state, the next access reads the
+#                               new CRC (asylum:utils:generators >= 2.10.0)
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:crc:1.1.0
+name        : asylum:component:crc:1.2.0
 description : CRC Module
 
 #=========================================
