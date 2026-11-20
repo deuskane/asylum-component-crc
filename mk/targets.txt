@@ -24,4 +24,10 @@ sim_crc16_xmodem_data16         : Simulation of sbi_crc (UVVM) - CRC-16/XMODEM w
 sim_crc5_usb                    : Simulation of sbi_crc (UVVM) - CRC-5/USB (WIDTH_CRC 5, REFLECT_IN/OUT, XOR_OUT 0x1F) - every scenario
 sim_crc8_i432                   : Simulation of sbi_crc (UVVM) - CRC-8/I-432-1 (poly 0x07, XOR_OUT 0x55) - every scenario
 sim_crc8_smbus                  : Simulation of sbi_crc (UVVM) - CRC-8/SMBUS (poly 0x07) - every scenario
+syn_crc16_arc_right             : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, CRC-16/ARC shift right
+syn_crc16_data16                : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, WIDTH_DATA 16
+syn_crc16_modbus                : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, CRC-16/MODBUS (PicoSoC)
+syn_crc5_usb                    : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, CRC-5/USB
+syn_crc8_smbus                  : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, CRC-8/SMBUS
+syn_default                     : Synthesis (Artix-7, sky130) of sbi_crc_wrapper, default generics
 
