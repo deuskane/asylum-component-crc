@@ -6,14 +6,22 @@ lint_ghdl_synth_crc16_modbus    : Synthesis check of sbi_crc_wrapper, CRC-16/MOD
 lint_ghdl_synth_crc5_usb        : Synthesis check of sbi_crc_wrapper, CRC-5/USB
 lint_ghdl_synth_crc8_smbus      : Synthesis check of sbi_crc_wrapper, CRC-8/SMBUS
 lint_ghdl_synth_default         : Synthesis check of sbi_crc_wrapper, default generics
-sim_crc16_arc                   : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005, shift left, REFLECT_IN/OUT)
-sim_crc16_arc_shift_right       : Simulation of sbi_crc with VIP - CRC-16/ARC (poly 0x8005 reversed, shift right, REFLECT_IN)
-sim_crc16_ccitt_false           : Simulation of sbi_crc with VIP - CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF)
-sim_crc16_genibus               : Simulation of sbi_crc with VIP - CRC-16/GENIBUS (poly 0x1021, init 0xFFFF, XOR_OUT 0xFFFF)
-sim_crc16_modbus                : Simulation of sbi_crc with VIP - CRC-16/MODBUS (poly 0xA001, shift right, LSB first - PicoSoC config)
-sim_crc16_x25                   : Simulation of sbi_crc with VIP - CRC-16/X-25 (poly 0x1021, REFLECT_IN/OUT, XOR_OUT 0xFFFF)
-sim_crc16_xmodem_data16         : Simulation of sbi_crc with VIP - CRC-16/XMODEM with WIDTH_DATA 16
-sim_crc5_usb                    : Simulation of sbi_crc with VIP - CRC-5/USB (WIDTH_CRC 5, REFLECT_IN/OUT, XOR_OUT 0x1F)
-sim_crc8_i432                   : Simulation of sbi_crc with VIP - CRC-8/I-432-1 (poly 0x07, XOR_OUT 0x55)
-sim_crc8_smbus                  : Simulation of sbi_crc with VIP - CRC-8/SMBUS (poly 0x07)
+sim_crc16_arc                   : Simulation of sbi_crc (UVVM) - CRC-16/ARC (poly 0x8005, shift left, REFLECT_IN/OUT) - every scenario
+sim_crc16_arc_shift_right       : Simulation of sbi_crc (UVVM) - CRC-16/ARC (poly 0x8005 reversed, shift right, REFLECT_IN) - every scenario
+sim_crc16_ccitt_false           : Simulation of sbi_crc (UVVM) - CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF) - every scenario
+sim_crc16_genibus               : Simulation of sbi_crc (UVVM) - CRC-16/GENIBUS (poly 0x1021, init 0xFFFF, XOR_OUT 0xFFFF) - every scenario
+sim_crc16_modbus                : Simulation of sbi_crc (UVVM) - CRC-16/MODBUS (poly 0xA001, shift right, LSB first, PicoSoC config) - every scenario
+sim_crc16_x25                   : Simulation of sbi_crc (UVVM) - CRC-16/X-25 (poly 0x1021, init 0xFFFF, REFLECT_IN/OUT, XOR_OUT 0xFFFF) - build only (scenarios of TESTS_LIST)
+sim_crc16_x25_async_reset       : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - asynchronous reset without clock edge
+sim_crc16_x25_check_value       : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - model and DUT against the catalogue check value of 123456789, CRC after each word
+sim_crc16_x25_core_default      : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - crc_core alone, default generics (CRC-16/XMODEM, CRC-8/SMBUS), crc_o REFLECT_OUT then XOR_OUT
+sim_crc16_x25_latency           : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - new CRC read by the access following the data0 write
+sim_crc16_x25_random            : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - 32 random messages, random init, random unused bits
+sim_crc16_x25_register_access   : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - data0 / data1 read back, crc0 / crc1 write the raw register and read the final CRC
+sim_crc16_x25_reset_values      : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - reset values of data0, data1 and of the CRC (XOR_OUT)
+sim_crc16_x25_seed_after_data   : Simulation of sbi_crc (UVVM) - CRC-16/X-25 - CRC byte written just after data0, the update of data0 is kept
+sim_crc16_xmodem_data16         : Simulation of sbi_crc (UVVM) - CRC-16/XMODEM with WIDTH_DATA 16 - every scenario
+sim_crc5_usb                    : Simulation of sbi_crc (UVVM) - CRC-5/USB (WIDTH_CRC 5, REFLECT_IN/OUT, XOR_OUT 0x1F) - every scenario
+sim_crc8_i432                   : Simulation of sbi_crc (UVVM) - CRC-8/I-432-1 (poly 0x07, XOR_OUT 0x55) - every scenario
+sim_crc8_smbus                  : Simulation of sbi_crc (UVVM) - CRC-8/SMBUS (poly 0x07) - every scenario
 

@@ -16,6 +16,7 @@
 -- Revisions  :
 -- Date        Version  Author   Description
 -- 2026-10-05  1.0      mrosiere Created
+-- 2026-11-20  1.1      mrosiere Moved to sim/crc (one directory per testbench)
 -------------------------------------------------------------------------------
 
 library ieee;
