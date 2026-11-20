@@ -1,0 +1,140 @@
+<mxfile host="Electron">
+  <diagram name="Overview" id="crc-ov">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="crc-ov-1" value="generics: WIDTH_CRC, WIDTH_DATA, POLYNOM, SHIFT_LEFT, LSB_FIRST,&lt;br&gt;POLYNOM_REVERSE, REFLECT_IN, REFLECT_OUT, XOR_OUT" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=10;fontColor=#666666;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="160" y="120" width="820" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-2" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="170" width="820" height="330" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-3" value="sbi_crc" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="160" y="170" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="210" width="200" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-5" value="CRC_registers" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="210" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-6" value="data0 (1 write wait state)&lt;br&gt;data1&lt;br&gt;crc0, crc1 (ext):&lt;br&gt;write = seed, read = final CRC" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="210" y="240" width="185" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-7" value="M" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="235" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-8" value="S" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="235" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=classic;startFill=1;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="245" as="sourcePoint"/>
+            <mxPoint x="200" y="245" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-10" value="SBI" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="70" y="217" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-11" value="crc_r&lt;br&gt;raw CRC register" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="500" y="330" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-12" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="660" y="210" width="280" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-13" value="crc_core" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="660" y="210" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-14" value="REFLECT_IN&lt;br&gt;bit order&lt;br&gt;(LSB_FIRST)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="680" y="249" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-15" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.multi-cloud_finops;" vertex="1" parent="1">
+          <mxGeometry x="830" y="250" width="48" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-16" value="engine: WIDTH_DATA x (shift, XOR POLYNOM)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="745" y="214" width="195" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-17" value="crc_o&lt;br&gt;REFLECT_OUT then XOR_OUT" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="680" y="400" width="240" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="274" as="sourcePoint"/>
+            <mxPoint x="680" y="274" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-19" value="data1:data0" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="430" y="254" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="274" as="sourcePoint"/>
+            <mxPoint x="830" y="274" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="345" as="sourcePoint"/>
+            <mxPoint x="500" y="345" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-22" value="seed write" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="402" y="323" width="96" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="370" as="sourcePoint"/>
+            <mxPoint x="500" y="370" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-24" value="data0 write" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="402" y="372" width="96" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="630" y="345" as="sourcePoint"/>
+            <mxPoint x="854" y="298" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="854" y="345"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-26" value="crc_i" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="325" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="878" y="274" as="sourcePoint"/>
+            <mxPoint x="630" y="368" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="910" y="274"/>
+              <mxPoint x="910" y="368"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-28" value="crc_next_o" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="690" y="368" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="crc-ov-29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="565" y="380" as="sourcePoint"/>
+            <mxPoint x="680" y="425" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="565" y="425"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="450" as="sourcePoint"/>
+            <mxPoint x="400" y="450" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="crc-ov-31" value="final CRC (crc0, crc1 read)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="430" width="200" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

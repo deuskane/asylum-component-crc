@@ -1,0 +1,21 @@
+{
+ "signal": [
+  {"name": "clk_i",                    "wave": "p....."},
+  ["SBI",
+   {"name": "cs",                      "wave": "01..0."},
+   {"name": "we",                      "wave": "01.0.."},
+   {"name": "re",                      "wave": "0..10."},
+   {"name": "addr",                    "wave": "x3.4x.", "data": ["data0", "crc0"]},
+   {"name": "wdata",                   "wave": "x3.x..", "data": ["byte"]},
+   {"name": "ready",                   "wave": "10.1..", "node": ".A"},
+   {"name": "rdata",                   "wave": "x..5x.", "data": ["final CRC"]}
+  ],
+  {},
+  {"name": "data0",                    "wave": "3.3...", "data": ["previous", "byte"]},
+  {"name": "data0 we (wait state)",    "wave": "0.10.."},
+  {"name": "crc_r (raw)",              "wave": "4..4..", "data": ["CRC before", "CRC after data1:data0"]}
+ ],
+ "head": {"text": "Write of data0, then read of crc0"},
+ "foot": {"text": "One wait state on data0: crc_r is updated at the end of the access"},
+ "config": {"hscale": 2}
+}
