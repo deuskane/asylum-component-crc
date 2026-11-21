@@ -169,14 +169,14 @@ Figures of the `syn_*` targets (`make nonreg_syn`, see [Targets](#targets)): [sy
 
 | Configuration | LUT¹ | LUTRAM¹ | FF¹ | CARRY4¹ | MUXF7/F8¹ | BRAM¹ | DSP¹ | Area² (µm²) | kGE³ |
 |---|---|---|---|---|---|---|---|---|---|
-| `syn_default` (16 bits, polynomial 0x1021, shift right, MSB first) | 77 | 0 | 33 | 0 | 4 | 0 | 0 | 1751.68 | 0.467 |
-| `syn_crc8_smbus` (CRC-8/SMBUS) | 52 | 0 | 25 | 0 | 0 | 0 | 0 | 1333.78 | 0.355 |
-| `syn_crc16_modbus` (CRC-16/MODBUS, shift right, LSB first) | 74 | 0 | 33 | 0 | 4 | 0 | 0 | 1742.92 | 0.464 |
-| `syn_crc16_arc_right` (CRC-16/ARC, shift right, `POLYNOM_REVERSE`, `REFLECT_IN`) | 74 | 0 | 33 | 0 | 4 | 0 | 0 | 1742.92 | 0.464 |
-| `syn_crc5_usb` (CRC-5/USB, `REFLECT_IN`, `REFLECT_OUT`, `XOR_OUT`) | 47 | 0 | 22 | 0 | 2 | 0 | 0 | 1144.85 | 0.305 |
-| `syn_crc16_data16` (16 bits, `WIDTH_DATA` 16, shift left) | 83 | 0 | 33 | 0 | 6 | 0 | 0 | 2003.17 | 0.534 |
+| `syn_default` (16 bits, polynomial 0x1021, shift right, MSB first) | 43 | 0 | 33 | 0 | 4 | 0 | 0 | 1751.68 | 0.467 |
+| `syn_crc8_smbus` (CRC-8/SMBUS) | 28 | 0 | 25 | 0 | 0 | 0 | 0 | 1333.78 | 0.355 |
+| `syn_crc16_modbus` (CRC-16/MODBUS, shift right, LSB first) | 40 | 0 | 33 | 0 | 4 | 0 | 0 | 1742.92 | 0.464 |
+| `syn_crc16_arc_right` (CRC-16/ARC, shift right, `POLYNOM_REVERSE`, `REFLECT_IN`) | 40 | 0 | 33 | 0 | 4 | 0 | 0 | 1742.92 | 0.464 |
+| `syn_crc5_usb` (CRC-5/USB, `REFLECT_IN`, `REFLECT_OUT`, `XOR_OUT`) | 26 | 0 | 22 | 0 | 2 | 0 | 0 | 1144.85 | 0.305 |
+| `syn_crc16_data16` (16 bits, `WIDTH_DATA` 16, shift left) | 49 | 0 | 33 | 0 | 6 | 0 | 0 | 2003.17 | 0.534 |
 
-¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. An `INV` counts as a `LUT1`: `synth_xilinx` puts one on the reset pin of each flip-flop with the active-low reset (34 of the 77 LUTs of `syn_default`). The IP has no memory: no LUTRAM, no BRAM. Flip-flops: `data0` and `data1` (16), the CRC register (`WIDTH_CRC`), the wait state of `data0` (1).
+¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. Identical cells are merged as a vendor tool does (`opt_merge -share_all`): the inverters of an active-low reset net become one; every remaining cell is counted, an `INV` as a `LUT1` (2 of the 43 LUTs of `syn_default`). The IP has no memory: no LUTRAM, no BRAM. Flip-flops: `data0` and `data1` (16), the CRC register (`WIDTH_CRC`), the wait state of `data0` (1).
 
 ² SkyWater sky130 `sky130_fd_sc_hd`, typical corner (tt, 25 °C, 1.80 V), Yosys 0.33 `synth` + `dfflibmap` + `abc -liberty`: standard-cell area only, no timing constraint, no buffering, clock tree or placement.
 
